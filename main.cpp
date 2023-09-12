@@ -1,64 +1,136 @@
 #include <iostream>
-#include <fstream>
-#include <string>
+#include <vector>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpragma-pack"
+#define SDL_MAIN_HANDLED
+#include <SDL.h>
+#include <SDL_vulkan.h>
+#pragma clang diagnostic pop
+#include <vulkan/vulkan.hpp>
 
-#include "vk/device.hpp"
-#include "vk/swapchain.hpp"
-#include "window/window.hpp"
+#ifdef _WIN32
+#pragma comment(linker, "/subsystem:windows")
+#define VK_USE_PLATFORM_WIN32_KHR
+#define PLATFORM_SURFACE_EXTENSION_NAME VK_KHR_WIN32_SURFACE_EXTENSION_NAME
+#endif
 
-VkBool32 VKAPI_CALL debug_cb(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                             VkDebugUtilsMessageTypeFlagsEXT messageType,
-                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+#define APP_NAME      "hello-triangle"
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+#ifndef UINT32_MAX
+#define UINT32_MAX 0xffffffff
+#endif
+
+int main(int argc, char* argv[])
 {
-    auto type = [messageSeverity]()
-    {
-        switch (messageSeverity)
-        {
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            {
-                return "WARNING";
-            }
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            {
-                return "ERROR";
-            }
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            {
-                return "INFO";
-            }
-            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            {
-                return "VERBOSE";
-            }
-            default:
-            {
-                return "UNDEFINE";
-            }
-        }
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Vulkan_LoadLibrary(nullptr);
+    SDL_Window* window = SDL_CreateWindow(APP_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 360,
+                                          SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN);
+
+    uint32_t extensionCount;
+    const char** extensionNames = 0;
+    SDL_Vulkan_GetInstanceExtensions(window, &extensionCount, nullptr);
+    extensionNames = new const char*[extensionCount];
+    SDL_Vulkan_GetInstanceExtensions(window, &extensionCount, extensionNames);
+    const VkInstanceCreateInfo instInfo = {
+        VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, // sType
+        nullptr,                                // pNext
+        0,                                      // flags
+        nullptr,                                // pApplicationInfo
+        0,                                      // enabledLayerCount
+        nullptr,                                // ppEnabledLayerNames
+        extensionCount,                         // enabledExtensionCount
+        extensionNames,                         // ppEnabledExtensionNames
     };
-    std::cerr << std::format("\n[Vulkan Validation Layer: {}] {}\n\n", type(), pCallbackData->pMessage);
+    VkInstance vkInst;
+    vkCreateInstance(&instInfo, nullptr, &vkInst);
 
-    return VK_FALSE;
-}
+    uint32_t physicalDeviceCount;
+    vkEnumeratePhysicalDevices(vkInst, &physicalDeviceCount, nullptr);
+    std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
+    vkEnumeratePhysicalDevices(vkInst, &physicalDeviceCount, physicalDevices.data());
+    VkPhysicalDevice physicalDevice = physicalDevices[0];
 
-using namespace proj;
+    uint32_t queueFamilyCount;
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
 
-int main(int argc, char** argv)
-{
-    Window w(1920, 1080);
+    VkSurfaceKHR surface;
+    SDL_Vulkan_CreateSurface(window, vkInst, &surface);
 
-    Device::Config config;
-    config.instance_exts = w.required_vk_instance_exts();
-    config.device_exts.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-    config.debug_cb = debug_cb;
-    Device device(config);
+    uint32_t graphicsQueueIndex = UINT32_MAX;
+    uint32_t presentQueueIndex = UINT32_MAX;
+    VkBool32 support;
+    uint32_t i = 0;
+    for (VkQueueFamilyProperties queueFamily : queueFamilies)
+    {
+        if (graphicsQueueIndex == UINT32_MAX && queueFamily.queueCount > 0 &&
+            queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            graphicsQueueIndex = i;
+        if (presentQueueIndex == UINT32_MAX)
+        {
+            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &support);
+            if (support)
+                presentQueueIndex = i;
+        }
+        ++i;
+    }
 
-    Surface surface(w.get_surface(device.get_instance()));
-    VkQueue c = Device::get_graphics_queue();
+    float queuePriority = 1.0f;
+    VkDeviceQueueCreateInfo queueInfo = {
+        VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, // sType
+        nullptr,                                    // pNext
+        0,                                          // flags
+        graphicsQueueIndex,                         // graphicsQueueIndex
+        1,                                          // queueCount
+        &queuePriority,                             // pQueuePriorities
+    };
 
-    Fence f;
-    Semaphore s;
+    VkPhysicalDeviceFeatures deviceFeatures = {};
+    const char* deviceExtensionNames[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+    VkDeviceCreateInfo createInfo = {
+        VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, // sType
+        nullptr,                              // pNext
+        0,                                    // flags
+        1,                                    // queueCreateInfoCount
+        &queueInfo,                           // pQueueCreateInfos
+        0,                                    // enabledLayerCount
+        nullptr,                              // ppEnabledLayerNames
+        1,                                    // enabledExtensionCount
+        deviceExtensionNames,                 // ppEnabledExtensionNames
+        &deviceFeatures,                      // pEnabledFeatures
+    };
+    VkDevice device;
+    vkCreateDevice(physicalDevice, &createInfo, nullptr, &device);
 
-    Swapchain swapschain(surface, 1920, 1080);
-    return EXIT_SUCCESS;
+    VkQueue graphicsQueue;
+    vkGetDeviceQueue(device, graphicsQueueIndex, 0, &graphicsQueue);
+
+    VkQueue presentQueue;
+    vkGetDeviceQueue(device, presentQueueIndex, 0, &presentQueue);
+
+    SDL_Log("Initialized with errors: %s", SDL_GetError());
+
+    bool running = true;
+    while (running)
+    {
+        SDL_Event windowEvent;
+        while (SDL_PollEvent(&windowEvent))
+            if (windowEvent.type == SDL_QUIT)
+            {
+                running = false;
+                break;
+            }
+    }
+
+    vkDestroyDevice(device, nullptr);
+    vkDestroyInstance(vkInst, nullptr);
+    SDL_DestroyWindow(window);
+    SDL_Vulkan_UnloadLibrary();
+    SDL_Quit();
+
+    SDL_Log("Cleaned up with errors: %s", SDL_GetError());
+
+    return 0;
 }

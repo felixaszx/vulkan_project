@@ -7,10 +7,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/exe)
 
-add_subdirectory(src)
+find_package(SDL2 REQUIRED)
+find_package(Vulkan REQUIRED)
 
-add_executable(project main.cpp)
+file(GLOB_RECURSE SRC src/*.cpp)
+add_executable(project main.cpp ${SRC})
 
 target_include_directories(project PUBLIC ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries(project PUBLIC vk)
-target_link_libraries(project PUBLIC window)
+target_link_libraries(project PUBLIC SDL2::SDL2)
+target_link_libraries(project PUBLIC Vulkan::Vulkan)

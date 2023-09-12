@@ -100,8 +100,8 @@
                 "CMake: configure",
                 "CMake: build",
                 //"glslc",
-                //"add dlls info",
-                //"copy dlls"
+                "add dlls info",
+                "copy dlls"
             ]
         },
         {
