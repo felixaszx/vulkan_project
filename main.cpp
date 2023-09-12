@@ -2,8 +2,9 @@
 #include <fstream>
 #include <string>
 
-#include "rhi/device.hpp"
-#include "rhi/vk/vk.hpp"
+#include "vk/device.hpp"
+#include "vk/swapchain.hpp"
+#include "window/window.hpp"
 
 VkBool32 VKAPI_CALL debug_cb(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                              VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -35,16 +36,29 @@ VkBool32 VKAPI_CALL debug_cb(VkDebugUtilsMessageSeverityFlagBitsEXT messageSever
             }
         }
     };
-    std::cerr << std::format("[Vulkan Validation Layer: {}] {}\n\n", type(), pCallbackData->pMessage);
+    std::cerr << std::format("\n[Vulkan Validation Layer: {}] {}\n\n", type(), pCallbackData->pMessage);
 
     return VK_FALSE;
 }
 
+using namespace proj;
+
 int main(int argc, char** argv)
 {
-    rhi::Vk::DeviceConfig config;
+    Window w(1920, 1080);
+
+    Device::Config config;
+    config.instance_exts = w.required_vk_instance_exts();
+    config.device_exts.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     config.debug_cb = debug_cb;
-    rhi::Device<rhi::Vk> device(config);
-    auto c = device.get_compute_queue();
+    Device device(config);
+
+    Surface surface(w.get_surface(device.get_instance()));
+    VkQueue c = Device::get_graphics_queue();
+
+    Fence f;
+    Semaphore s;
+
+    Swapchain swapschain(surface, 1920, 1080);
     return EXIT_SUCCESS;
 }

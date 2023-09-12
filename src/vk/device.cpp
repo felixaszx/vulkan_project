@@ -1,9 +1,14 @@
-#include "rhi/vk/vk.hpp"
+#include "vk/device.hpp"
 
-namespace rhi
+namespace proj
 {
-    void Vk::config_init_device(const DeviceConfig& config)
+    Device::Device(const Config& config)
     {
+        if (instance)
+        {
+            return;
+        }
+
         VkApplicationInfo app_info = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
         app_info.pApplicationName = "";
         app_info.applicationVersion = VK_MAKE_VERSION(0, 0, 0);
@@ -60,15 +65,16 @@ namespace rhi
         create_logical_device(config);
     }
 
-    void Vk::destroy_device()
+    Device::~Device()
     {
+        vkDestroyDevice(device, nullptr);
         PFN_vkDestroyDebugUtilsMessengerEXT destroy_debug =
             (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
         destroy_debug(instance, messenger, nullptr);
         vkDestroyInstance(instance, nullptr);
     }
 
-    void Vk::create_logical_device(const DeviceConfig& config)
+    void Device::create_logical_device(const Config& config)
     {
         uint32_t physical_deviec_count = 0;
         vkEnumeratePhysicalDevices(instance, &physical_deviec_count, nullptr);
@@ -86,6 +92,9 @@ namespace rhi
             if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
             {
                 selected = device;
+                physical = selected;
+                std::cout << std::format("\nPhysical Device: {} is selected", //
+                                         properties.deviceName);
             }
         }
 
@@ -155,7 +164,6 @@ namespace rhi
         std::vector<const char*> exts = config.device_exts;
         std::vector<const char*> layers = config.device_layers;
 
-        exts.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         if (config.validation)
         {
             layers.push_back("VK_LAYER_KHRONOS_validation");
@@ -182,4 +190,37 @@ namespace rhi
         vkGetDeviceQueue(device, compute_queue_family, 0, &compute_queue);
         vkGetDeviceQueue(device, transfer_queue_family, 0, &transfer_queue);
     }
-}; // namespace rhi
+
+    Surface::Surface(VkSurfaceKHR new_surface)
+        : surface(new_surface)
+    {
+    }
+
+    Surface::~Surface()
+    {
+        vkDestroySurfaceKHR(Device::get_instance(), surface, nullptr);
+    }
+
+    Semaphore::Semaphore()
+    {
+        VkSemaphoreCreateInfo create_info{VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+        vkCreateSemaphore(Device::get(), &create_info, nullptr, &sem);
+    }
+
+    Semaphore::~Semaphore()
+    {
+        vkDestroySemaphore(Device::get(), sem, nullptr);
+    }
+
+    Fence::Fence(bool signal)
+    {
+        VkFenceCreateInfo fence_info{VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
+        fence_info.flags = signal ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
+        vkCreateFence(Device::get(), &fence_info, nullptr, &fence);
+    }
+
+    Fence::~Fence()
+    {
+        vkDestroyFence(Device::get(), fence, nullptr);
+    }
+}; // namespace proj

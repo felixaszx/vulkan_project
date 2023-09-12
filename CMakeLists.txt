@@ -7,9 +7,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/exe)
 
-add_subdirectory(src/rhi)
+add_subdirectory(src)
 
 add_executable(project main.cpp)
 
 target_include_directories(project PUBLIC ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries(project PUBLIC rhi)
+target_link_libraries(project PUBLIC vk)
+target_link_libraries(project PUBLIC window)
