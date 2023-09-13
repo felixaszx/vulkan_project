@@ -32,4 +32,12 @@ BraceWrapping:
   BeforeLambdaBody: true
   BeforeWhile: true
 AlignArrayOfStructures: Right
+AlignConsecutiveAssignments:
+  Enabled: true
+AlignConsecutiveBitFields:
+  Enabled: true
+AlignConsecutiveDeclarations:
+  Enabled: true
+AlignConsecutiveMacros:
+  Enabled: true
 ...

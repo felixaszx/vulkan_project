@@ -1,37 +1,12 @@
-#include <iostream>
-#include <vector>
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpragma-pack"
-#define SDL_MAIN_HANDLED
-#include <SDL.h>
-#include <SDL_vulkan.h>
-#pragma clang diagnostic pop
+#include <window/window.hpp>
 #include <vulkan/vulkan.hpp>
-
-#ifdef _WIN32
-#pragma comment(linker, "/subsystem:windows")
-#define VK_USE_PLATFORM_WIN32_KHR
-#define PLATFORM_SURFACE_EXTENSION_NAME VK_KHR_WIN32_SURFACE_EXTENSION_NAME
-#endif
-
-#define APP_NAME      "hello-triangle"
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-#ifndef UINT32_MAX
-#define UINT32_MAX 0xffffffff
-#endif
 
 int main(int argc, char* argv[])
 {
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_Vulkan_LoadLibrary(nullptr);
-    SDL_Window* window = SDL_CreateWindow(APP_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 360,
-                                          SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN);
+    using namespace proj;
+    Window w(1920, 1080);
+    auto   exts = w.get_instance_exts();
 
-    uint32_t extensionCount;
-    const char** extensionNames = 0;
-    SDL_Vulkan_GetInstanceExtensions(window, &extensionCount, nullptr);
-    extensionNames = new const char*[extensionCount];
-    SDL_Vulkan_GetInstanceExtensions(window, &extensionCount, extensionNames);
     const VkInstanceCreateInfo instInfo = {
         VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, // sType
         nullptr,                                // pNext
@@ -39,8 +14,8 @@ int main(int argc, char* argv[])
         nullptr,                                // pApplicationInfo
         0,                                      // enabledLayerCount
         nullptr,                                // ppEnabledLayerNames
-        extensionCount,                         // enabledExtensionCount
-        extensionNames,                         // ppEnabledExtensionNames
+        static_cast<uint32_t>(exts.size()),     // enabledExtensionCount
+        exts.data(),                            // ppEnabledExtensionNames
     };
     VkInstance vkInst;
     vkCreateInstance(&instInfo, nullptr, &vkInst);
@@ -56,11 +31,11 @@ int main(int argc, char* argv[])
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
 
-    VkSurfaceKHR surface;
-    SDL_Vulkan_CreateSurface(window, vkInst, &surface);
+    VkSurfaceKHR surface = nullptr;
+    SDL_Vulkan_CreateSurface(w.handle(), vkInst, &surface);
 
     uint32_t graphicsQueueIndex = UINT32_MAX;
-    uint32_t presentQueueIndex = UINT32_MAX;
+    uint32_t presentQueueIndex  = UINT32_MAX;
     VkBool32 support;
     uint32_t i = 0;
     for (VkQueueFamilyProperties queueFamily : queueFamilies)
@@ -77,8 +52,8 @@ int main(int argc, char* argv[])
         ++i;
     }
 
-    float queuePriority = 1.0f;
-    VkDeviceQueueCreateInfo queueInfo = {
+    float                   queuePriority = 1.0f;
+    VkDeviceQueueCreateInfo queueInfo     = {
         VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, // sType
         nullptr,                                    // pNext
         0,                                          // flags
@@ -87,9 +62,9 @@ int main(int argc, char* argv[])
         &queuePriority,                             // pQueuePriorities
     };
 
-    VkPhysicalDeviceFeatures deviceFeatures = {};
-    const char* deviceExtensionNames[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-    VkDeviceCreateInfo createInfo = {
+    VkPhysicalDeviceFeatures deviceFeatures         = {};
+    const char*              deviceExtensionNames[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+    VkDeviceCreateInfo       createInfo             = {
         VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, // sType
         nullptr,                              // pNext
         0,                                    // flags
@@ -126,9 +101,6 @@ int main(int argc, char* argv[])
 
     vkDestroyDevice(device, nullptr);
     vkDestroyInstance(vkInst, nullptr);
-    SDL_DestroyWindow(window);
-    SDL_Vulkan_UnloadLibrary();
-    SDL_Quit();
 
     SDL_Log("Cleaned up with errors: %s", SDL_GetError());
 

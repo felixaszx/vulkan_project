@@ -6,13 +6,12 @@ set(CMAKE_C_EXTENSIONS off)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/exe)
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
-find_package(SDL2 REQUIRED)
-find_package(Vulkan REQUIRED)
+add_subdirectory(src)
 
-file(GLOB_RECURSE SRC src/*.cpp)
-add_executable(project main.cpp ${SRC})
+add_executable(project src/main.cpp)
 
 target_include_directories(project PUBLIC ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries(project PUBLIC SDL2::SDL2)
-target_link_libraries(project PUBLIC Vulkan::Vulkan)
+target_link_libraries(project PUBLIC vk_window)
