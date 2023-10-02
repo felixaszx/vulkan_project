@@ -24,6 +24,13 @@ namespace proj
         SDL_Quit();
     }
 
+    vk::SurfaceKHR Window::create_surface(vk::Instance instance)
+    {
+        VkSurfaceKHR surface = nullptr;
+        SDL_Vulkan_CreateSurface(handle(), instance, &surface);
+        return surface;
+    }
+
     std::vector<const char*> Window::get_instance_exts()
     {
         uint32_t ext_count = 0;
