@@ -34,6 +34,7 @@ int main(int argc, char* argv[])
     layouts[1] = new DescriptorLayout(device, bindings[1]);
     layouts[2] = new DescriptorLayout(device, bindings[2]);
     DescriptorPool pool(device, {layouts[0], layouts[1], layouts[2]});
+    
 
     bool running = true;
     while (running)
