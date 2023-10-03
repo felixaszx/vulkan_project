@@ -5,45 +5,87 @@
 #include <format>
 #include <vulkan/vulkan.hpp>
 
+#define GET_TRY_VK_FUNC(_0, _1, NAME, ...) NAME
+#define try_vk0(statement)                                               \
+    try                                                                  \
+    {                                                                    \
+        statement;                                                       \
+    }                                                                    \
+    catch (const std::exception& e)                                      \
+    {                                                                    \
+        std::cerr << std::format("[Vulkan exception] {}\n\n", e.what()); \
+    }
+#define try_vk1(statement, msg)                                                   \
+    try                                                                           \
+    {                                                                             \
+        statement;                                                                \
+    }                                                                             \
+    catch (const std::exception& e)                                               \
+    {                                                                             \
+        std::cerr << std::format("[Vulkan exception, {}] {}\n\n", msg, e.what()); \
+    }
+#define try_vk(...) GET_TRY_VK_FUNC(__VA_ARGS__, try_vk1, try_vk0)(__VA_ARGS__);
+
 namespace proj
 {
-    class VkContex
+    class Contex
     {
       private:
         vk::Instance instance_ = nullptr;
         vk::DebugUtilsMessengerEXT message_ = nullptr;
 
       public:
-        VkContex(std::vector<const char*>& instance_exts, bool enable_debug = true);
-        ~VkContex();
+        Contex(std::vector<const char*>& instance_exts, bool enable_debug = true);
+        ~Contex();
 
         vk::Instance instance() const;
+        operator vk::Instance() const;
     };
 
-    struct VkDeviceDetail
+    struct DeviceCreator;
+    class DeviceDetail
     {
+        friend DeviceCreator;
+
+      private:
+        DeviceDetail(){};
+
+      public:
         vk::Device device_ = nullptr;
+        vk::PhysicalDevice physical_ = nullptr;
+
+        operator vk::Device() const;
 
         struct
         {
             vk::Queue graphics_ = nullptr;
-            vk::Queue present_ = nullptr;
             vk::Queue transfer_ = nullptr;
             vk::Queue compute_ = nullptr;
         } queue_;
-        
-        VkDeviceDetail() = delete;
-        ~VkDeviceDetail();
+
+        ~DeviceDetail();
     };
 
-    struct VkDeviceCreator
+    struct DeviceCreator
     {
         bool debug = true;
         uint32_t device_index = 0;
+        vk::PhysicalDeviceFeatures feature_{};
         std::vector<const char*> device_ext_names_{};
         std::vector<const char*> device_layer_names_{};
 
-        VkDeviceDetail create_device();
+        DeviceDetail create_device(vk::Instance instance);
+    };
+
+    struct DeviceObj
+    {
+      protected:
+        vk::Device device_ = nullptr;
+
+        DeviceObj(vk::Device device)
+            : device_(device)
+        {
+        }
     };
 }; // namespace proj
 

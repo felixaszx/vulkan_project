@@ -1,96 +1,53 @@
-#include <window/window.hpp>
-#include <vk/vk.hpp>
+#include "window/window.hpp"
+#include "vk/vk.hpp"
+#include "vk/descriptor.hpp"
 
 int main(int argc, char* argv[])
 {
     using namespace proj;
-    std::unique_ptr w = std::make_unique<Window>(1920, 1080);
-    auto exts = w->get_instance_exts();
+    Window w(1920, 1080);
+    auto exts = w.get_instance_exts();
 
-   std::unique_ptr c  =  std::make_unique<VkContex>(exts);
+    Contex c(exts);
 
-   uint32_t physicalDeviceCount;
-   vkEnumeratePhysicalDevices(c->instance(), &physicalDeviceCount, nullptr);
-   std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
-   vkEnumeratePhysicalDevices(c->instance(), &physicalDeviceCount, physicalDevices.data());
-   VkPhysicalDevice physicalDevice = physicalDevices[0];
+    vk::SurfaceKHR surface = w.create_surface(c);
 
-   uint32_t queueFamilyCount;
-   vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
-   std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-   vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
+    DeviceCreator device_c{};
+    DeviceDetail device_detail = device_c.create_device(c);
+    vk::Device device = device_detail.device_;
 
-   VkSurfaceKHR surface = w->create_surface(c->instance());
+    std::vector<vk::DescriptorSetLayoutBinding> bindings[3]{};
+    VkDescriptorSetLayoutBinding a;
+    bindings[0].push_back({0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex});
+    for (uint32_t i = 1; i < 7; i++)
+    {
+        bindings[0].push_back({i, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment});
+    }
+    for (uint32_t i = 0; i < 4; i++)
+    {
+        bindings[1].push_back({i, vk::DescriptorType::eInputAttachment, 1, vk::ShaderStageFlagBits::eFragment});
+    }
+    bindings[2].push_back({0, vk::DescriptorType::eInputAttachment, 1, vk::ShaderStageFlagBits::eFragment});
 
-   uint32_t graphicsQueueIndex = UINT32_MAX;
-   uint32_t presentQueueIndex = UINT32_MAX;
-   VkBool32 support;
-   uint32_t i = 0;
-   for (VkQueueFamilyProperties queueFamily : queueFamilies)
-   {
-       if (graphicsQueueIndex == UINT32_MAX && queueFamily.queueCount > 0 &&
-           queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-           graphicsQueueIndex = i;
-       if (presentQueueIndex == UINT32_MAX)
-       {
-           vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &support);
-           if (support)
-               presentQueueIndex = i;
-       }
-       ++i;
-   }
+    DescriptorLayout* layouts[3]{};
+    layouts[0] = new DescriptorLayout(device, bindings[0]);
+    layouts[1] = new DescriptorLayout(device, bindings[1]);
+    layouts[2] = new DescriptorLayout(device, bindings[2]);
+    DescriptorPool pool(device, {layouts[0], layouts[1], layouts[2]});
 
-   float queuePriority = 1.0f;
-   VkDeviceQueueCreateInfo queueInfo = {
-       VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, // sType
-       nullptr,                                    // pNext
-       0,                                          // flags
-       graphicsQueueIndex,                         // graphicsQueueIndex
-       1,                                          // queueCount
-       &queuePriority,                             // pQueuePriorities
-   };
+    bool running = true;
+    while (running)
+    {
+        SDL_Event windowEvent;
+        while (SDL_PollEvent(&windowEvent))
+            if (windowEvent.type == SDL_QUIT)
+            {
+                running = false;
+                break;
+            }
+    }
 
-   VkPhysicalDeviceFeatures deviceFeatures = {};
-   const char* deviceExtensionNames[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-   VkDeviceCreateInfo createInfo = {
-       VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, // sType
-       nullptr,                              // pNext
-       0,                                    // flags
-       1,                                    // queueCreateInfoCount
-       &queueInfo,                           // pQueueCreateInfos
-       0,                                    // enabledLayerCount
-       nullptr,                              // ppEnabledLayerNames
-       1,                                    // enabledExtensionCount
-       deviceExtensionNames,                 // ppEnabledExtensionNames
-       &deviceFeatures,                      // pEnabledFeatures
-   };
-   VkDevice device;
-   vkCreateDevice(physicalDevice, &createInfo, nullptr, &device);
+    c.instance().destroySurfaceKHR(surface);
 
-   VkQueue graphicsQueue;
-   vkGetDeviceQueue(device, graphicsQueueIndex, 0, &graphicsQueue);
-
-   VkQueue presentQueue;
-   vkGetDeviceQueue(device, presentQueueIndex, 0, &presentQueue);
-
-   SDL_Log("Initialized with errors: %s", SDL_GetError());
-
-   bool running = true;
-   while (running)
-   {
-       SDL_Event windowEvent;
-       while (SDL_PollEvent(&windowEvent))
-           if (windowEvent.type == SDL_QUIT)
-           {
-               running = false;
-               break;
-           }
-   }
-
-   vkDestroyDevice(device, nullptr);
-   c->instance().destroySurfaceKHR(surface);
-
-   SDL_Log("Cleaned up with errors: %s", SDL_GetError());
-
-   return 0;
+    return 0;
 }
