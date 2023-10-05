@@ -15,6 +15,7 @@ int main(int argc, char* argv[])
     DeviceCreator device_c{};
     DeviceDetail device_detail = device_c.create_device(c);
     vk::Device device = device_detail.device_;
+    
 
     std::vector<vk::DescriptorSetLayoutBinding> bindings[3]{};
     VkDescriptorSetLayoutBinding a;
@@ -34,7 +35,6 @@ int main(int argc, char* argv[])
     layouts[1] = new DescriptorLayout(device, bindings[1]);
     layouts[2] = new DescriptorLayout(device, bindings[2]);
     DescriptorPool pool(device, {layouts[0], layouts[1], layouts[2]});
-    
 
     bool running = true;
     while (running)
@@ -46,6 +46,11 @@ int main(int argc, char* argv[])
                 running = false;
                 break;
             }
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        delete layouts[i];
     }
 
     c.instance().destroySurfaceKHR(surface);
