@@ -1,5 +1,8 @@
 #include "vk/vk.hpp"
 
+#include <iostream>
+#include <format>
+
 namespace proj
 {
     VkBool32 VKAPI_CALL debug_cb(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -177,7 +180,7 @@ namespace proj
             {
                 break;
             }
-            
+
             vk::DeviceQueueCreateInfo queue_create_info{};
             queue_create_info.queueFamilyIndex = queue_indices[i];
             queue_create_info.queueCount = 1;
@@ -207,5 +210,93 @@ namespace proj
         try_vk(detail.queue_.transfer_ = detail.device_.getQueue(queue_indices[2], 0), "do not get transfer queue");
 
         return detail;
+    }
+
+    Swapchain::Swapchain(vk::Instance instance, DeviceDetail& device_detail, vk::SurfaceKHR surface,
+                         vk::Extent2D extent)
+        : device_(device_detail.device_)
+    {
+        std::vector<vk::SurfaceFormatKHR> surface_formats = device_detail.physical_.getSurfaceFormatsKHR(surface);
+        std::vector<vk::PresentModeKHR> present_modes = device_detail.physical_.getSurfacePresentModesKHR(surface);
+        vk::SurfaceCapabilitiesKHR capabilities = device_detail.physical_.getSurfaceCapabilitiesKHR(surface);
+
+        vk::SurfaceFormatKHR selected_format = surface_formats[0];
+        vk::PresentModeKHR selected_present_mode = present_modes[0];
+
+        for (vk::SurfaceFormatKHR& format : surface_formats)
+        {
+            if (format.format == vk::Format::eR8G8B8A8Srgb && //
+                format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
+            {
+                selected_format = format;
+                break;
+            }
+        }
+
+        for (vk::PresentModeKHR& present_mode : present_modes)
+        {
+            if (present_mode == vk::PresentModeKHR::eMailbox)
+            {
+                selected_present_mode = present_mode;
+                break;
+            }
+        }
+
+        uint32_t image_count = (capabilities.minImageCount + 1 > capabilities.maxImageCount) //
+                                   ? capabilities.maxImageCount                              //
+                                   : capabilities.minImageCount + 1;
+
+        vk::SwapchainCreateInfoKHR swapchain_create_info{};
+        swapchain_create_info.surface = surface;
+        swapchain_create_info.minImageCount = image_count;
+        swapchain_create_info.imageFormat = selected_format.format;
+        swapchain_create_info.imageColorSpace = selected_format.colorSpace;
+        swapchain_create_info.imageExtent = extent;
+        swapchain_create_info.imageArrayLayers = 1;
+        swapchain_create_info.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
+        swapchain_create_info.preTransform = capabilities.currentTransform;
+        swapchain_create_info.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
+        swapchain_create_info.presentMode = selected_present_mode;
+        swapchain_create_info.clipped = VK_TRUE;
+        swapchain_create_info.oldSwapchain = VK_NULL_HANDLE;
+
+        static_cast<vk::SwapchainKHR&>(*this) = device_.createSwapchainKHR(swapchain_create_info);
+        images_ = device_.getSwapchainImagesKHR(*this);
+        images_.reserve(image_count);
+        image_format_ = selected_format.format;
+
+        views_.resize(images_.size());
+        for (int i = 0; i < images_.size(); i++)
+        {
+            vk::ImageViewCreateInfo create_info{};
+            create_info.image = images_[i];
+            create_info.viewType = vk::ImageViewType::e2D;
+            create_info.format = image_format_;
+            create_info.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+            create_info.subresourceRange.baseMipLevel = 0;
+            create_info.subresourceRange.levelCount = 1;
+            create_info.subresourceRange.baseArrayLayer = 0;
+            create_info.subresourceRange.layerCount = 1;
+            views_[i] = device_.createImageView(create_info);
+        }
+    }
+
+    void Swapchain::destory()
+    {
+        if (views_[0] != nullptr)
+        {
+            destroy_image_views();
+        }
+
+        device_.destroySwapchainKHR(*this);
+    }
+
+    void Swapchain::destroy_image_views()
+    {
+        for (auto& view : views_)
+        {
+            device_.destroyImageView(view);
+            view = nullptr;
+        }
     }
 }; // namespace proj

@@ -1,8 +1,6 @@
 #ifndef VK_VK_HPP
 #define VK_VK_HPP
 
-#include <iostream>
-#include <format>
 #include <vulkan/vulkan.hpp>
 
 #define GET_TRY_VK_FUNC(_0, _1, NAME, ...) NAME
@@ -77,15 +75,20 @@ namespace proj
         DeviceDetail create_device(vk::Instance instance);
     };
 
-    struct DeviceObj
+    class Swapchain : vk::SwapchainKHR
     {
-      protected:
+      private:
         vk::Device device_ = nullptr;
 
-        DeviceObj(vk::Device device)
-            : device_(device)
-        {
-        }
+      public:
+        std::vector<vk::Image> images_{};
+        std::vector<vk::ImageView> views_{};
+        vk::Format image_format_ = {};
+
+        Swapchain(vk::Instance instance, DeviceDetail& device_detail, vk::SurfaceKHR surface, vk::Extent2D extent);
+        void destory();
+
+        void destroy_image_views();
     };
 }; // namespace proj
 
