@@ -48,7 +48,7 @@ namespace proj
         void set_stencil_atchm(vk::ImageView view,                                                  //
                                vk::ImageLayout layout = vk::ImageLayout::eStencilAttachmentOptimal, //
                                bool clear = false);
-        vk::RenderingInfo create_render_pass_info(vk::Rect2D extent, uint32_t layers = 1);
+        vk::RenderingInfo create_rendering_info(vk::Rect2D extent, uint32_t layers = 1);
     };
 } // namespace proj
 

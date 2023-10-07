@@ -8,6 +8,7 @@ set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
 find_package(SDL2 REQUIRED)
 find_package(Vulkan REQUIRED)
+find_package(Assimp REQUIRED)
 
 file(GLOB_RECURSE SRC */*.cpp *.cpp)
 add_library(graphics SHARED ${SRC})
@@ -15,3 +16,4 @@ add_library(graphics SHARED ${SRC})
 target_include_directories(graphics PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(graphics PUBLIC SDL2::SDL2)
 target_link_libraries(graphics PUBLIC Vulkan::Vulkan)
+target_link_libraries(graphics PUBLIC ${ASSIMP_LIBRARY})

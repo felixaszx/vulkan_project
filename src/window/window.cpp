@@ -40,4 +40,58 @@ namespace proj
 
         return exts;
     }
+
+    void KEY::set_state(int key, int state)
+    {
+        if (KEY_MAP_CURR_STATE[key] < STATE_DOWN)
+        {
+            KEY_MAP_PREV_STATE[key] = KEY_MAP_CURR_STATE[key];
+            KEY_MAP_CURR_STATE[key] = state;
+        }
+        else if (KEY_MAP_CURR_STATE[key] >= STATE_DOWN && state == STATE_DOWN)
+        {
+            KEY_MAP_PREV_STATE[key] = KEY_MAP_CURR_STATE[key];
+            KEY_MAP_CURR_STATE[key] = STATE_HOLD;
+        }
+        else
+        {
+            KEY_MAP_PREV_STATE[key] = KEY_MAP_CURR_STATE[key];
+            KEY_MAP_CURR_STATE[key] = state;
+        }
+    }
+
+    int KEY::get_state(int key)
+    {
+        return KEY_MAP_CURR_STATE[key];
+    }
+
+    int KEY::advance_state(int key)
+    {
+        if (KEY_MAP_PREV_STATE[key] == STATE_DOWN && KEY_MAP_CURR_STATE[key] == STATE_UP)
+        {
+            return STATE_QUICK_UP;
+        }
+
+        if (KEY_MAP_PREV_STATE[key] == STATE_DOWN && KEY_MAP_CURR_STATE[key] == STATE_HOLD)
+        {
+            return STATE_JUST_HOLD;
+        }
+
+        if (KEY_MAP_PREV_STATE[key] == STATE_UP && KEY_MAP_CURR_STATE[key] == STATE_DOWN)
+        {
+            return STATE_JUST_DOWN;
+        }
+
+        if (KEY_MAP_PREV_STATE[key] == STATE_HOLD && KEY_MAP_CURR_STATE[key] == STATE_UP)
+        {
+            return STATE_SLOW_UP;
+        }
+
+        if (KEY_MAP_PREV_STATE[key] == STATE_NONE && KEY_MAP_CURR_STATE[key] == STATE_NONE)
+        {
+            return STATE_NEVER_PRESS;
+        }
+
+        return STATE_NONE;
+    }
 }; // namespace proj

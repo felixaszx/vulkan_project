@@ -115,7 +115,7 @@ namespace proj
         stencil_.clearValue.setDepthStencil({1.0f, 0u});
     }
 
-    vk::RenderingInfo RenderPassInfoHolder::create_render_pass_info(vk::Rect2D extent, uint32_t layers)
+    vk::RenderingInfo RenderPassInfoHolder::create_rendering_info(vk::Rect2D extent, uint32_t layers)
     {
         vk::RenderingInfo info{};
         info.renderArea = extent;

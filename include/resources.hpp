@@ -5,11 +5,11 @@
 
 namespace proj
 {
-    class Image : vk::Image,        //
-                  vk::ImageView,    //
-                  vk::DeviceMemory, //
-                  vma::Allocation,  //
-                  vma::Allocator
+    class Image : public vk::Image,        //
+                  public vk::ImageView,    //
+                  public vk::DeviceMemory, //
+                  public vma::Allocation,  //
+                  public vma::Allocator
     {
       private:
         vk::Format image_format_ = {};
@@ -30,11 +30,11 @@ namespace proj
         vk::Format image_format() const { return image_format_; }
     };
 
-    class Buffer : vk::Buffer,       //
-                   vk::BufferView,   //
-                   vk::DeviceMemory, //
-                   vma::Allocation,  //
-                   vma::Allocator
+    class Buffer : public vk::Buffer,       //
+                   public vk::BufferView,   //
+                   public vk::DeviceMemory, //
+                   public vma::Allocation,  //
+                   public vma::Allocator
     {
       private:
         void* mapping_ = nullptr;
