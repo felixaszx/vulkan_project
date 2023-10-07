@@ -4,6 +4,7 @@
 #include <iostream>
 #include <format>
 #include <vulkan/vulkan.hpp>
+#include "vma/vk_mem_alloc.hpp"
 
 #define GET_TRY_VK_FUNC(_0, _1, _2, NAME, ...) NAME
 #define try_vk0(statement)                                               \
@@ -24,14 +25,14 @@
     {                                                                             \
         std::cerr << std::format("[Vulkan exception, {}] {}\n\n", msg, e.what()); \
     }
-#define try_vk2(statement, msg, ret)                                              \
-    try                                                                           \
-    {                                                                             \
-        statement;                                                                \
-    }                                                                             \
-    catch (const std::exception& e)                                               \
-    {                                                                             \
-        ret;                                                                      \
+#define try_vk2(statement, msg, ret) \
+    try                              \
+    {                                \
+        statement;                   \
+    }                                \
+    catch (const std::exception& e)  \
+    {                                \
+        ret;                         \
     }
 #define try_vk(...) GET_TRY_VK_FUNC(__VA_ARGS__, try_vk2, try_vk1, try_vk0)(__VA_ARGS__);
 
@@ -62,6 +63,7 @@ namespace proj
       public:
         vk::Device device_ = nullptr;
         vk::PhysicalDevice physical_ = nullptr;
+        vma::Allocator allocator_ = nullptr;
 
         operator vk::Device() const;
 

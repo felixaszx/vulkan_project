@@ -14,4 +14,4 @@ add_subdirectory(src)
 add_executable(project src/main.cpp)
 
 target_include_directories(project PUBLIC ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries(project PUBLIC vk_window)
+target_link_libraries(project PUBLIC graphics)

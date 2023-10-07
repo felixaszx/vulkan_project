@@ -1,5 +1,7 @@
 #include "window/window.hpp"
 #include "vk/vk.hpp"
+#include "render.hpp"
+#include "resources.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -14,9 +16,10 @@ int main(int argc, char* argv[])
     DeviceCreator device_c{};
     DeviceDetail device_detail = device_c.create_device(c);
     vk::Device device = device_detail.device_;
+    vma::Allocator allocator = device_detail.allocator_;
 
     Swapchain swapchian(c.instance(), device_detail, surface, {1920, 1080});
-
+    
     bool running = true;
     while (running)
     {

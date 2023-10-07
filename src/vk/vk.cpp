@@ -1,3 +1,4 @@
+#define VMA_IMPLEMENTATION
 #include "vk/vk.hpp"
 
 #include <iostream>
@@ -208,6 +209,21 @@ namespace proj
         try_vk(detail.queue_.graphics_ = detail.device_.getQueue(queue_indices[0], 0), "do not get graphic queue");
         try_vk(detail.queue_.compute_ = detail.device_.getQueue(queue_indices[1], 0), "do not get compute queue");
         try_vk(detail.queue_.transfer_ = detail.device_.getQueue(queue_indices[2], 0), "do not get transfer queue");
+
+        vma::VulkanFunctions vma_function{};
+        vma_function.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
+        vma_function.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
+        vma_function.vkGetDeviceBufferMemoryRequirements = &vkGetDeviceBufferMemoryRequirements;
+        vma_function.vkGetDeviceImageMemoryRequirements = &vkGetDeviceImageMemoryRequirements;
+
+        vma::AllocatorCreateInfo vma_create_info{};
+        vma_create_info.vulkanApiVersion = VK_API_VERSION_1_3;
+        vma_create_info.pVulkanFunctions = &vma_function;
+        vma_create_info.instance = instance;
+        vma_create_info.physicalDevice = detail.physical_;
+        vma_create_info.device = detail.device_;
+
+        try_vk(detail.allocator_ = vma::createAllocator(vma_create_info), "Do not create allocator");
 
         return detail;
     }
