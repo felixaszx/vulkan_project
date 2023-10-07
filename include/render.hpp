@@ -36,13 +36,18 @@ namespace proj
     {
       private:
         std::vector<vk::RenderingAttachmentInfo> atchms_{};
-        vk::RenderingAttachmentInfo depth_stencil_{};
+        vk::RenderingAttachmentInfo depth_{};
+        vk::RenderingAttachmentInfo stencil_{};
 
       public:
         void add_color_atchm(vk::ImageView view, //
                              vk::ImageLayout layout = vk::ImageLayout::eColorAttachmentOptimal);
-        void set_depth_stencil_atchm(vk::ImageView view,
-                                     vk::ImageLayout layout = vk::ImageLayout::eDepthStencilAttachmentOptimal);
+        void set_depth_atchm(vk::ImageView view,                                                //
+                             vk::ImageLayout layout = vk::ImageLayout::eDepthAttachmentOptimal, //
+                             bool clear = false);
+        void set_stencil_atchm(vk::ImageView view,                                                  //
+                               vk::ImageLayout layout = vk::ImageLayout::eStencilAttachmentOptimal, //
+                               bool clear = false);
         vk::RenderingInfo create_render_pass_info(vk::Rect2D extent, uint32_t layers = 1);
     };
 } // namespace proj

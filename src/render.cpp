@@ -23,7 +23,7 @@ namespace proj
         vk::CommandBufferAllocateInfo cmd_alloc_info{};
         cmd_alloc_info.level = vk::CommandBufferLevel::ePrimary;
         cmd_alloc_info.commandPool = cmd_pool_;
-        cmd_alloc_info.commandBufferCount = 1;
+        cmd_alloc_info.commandBufferCount = 2;
         main_cmds_ = device.allocateCommandBuffers(cmd_alloc_info);
     }
 
@@ -97,13 +97,22 @@ namespace proj
         atchms_.back().clearValue.color = {0.0f, 0.0f, 0.0f, 1.0f};
     }
 
-    void RenderPassInfoHolder::set_depth_stencil_atchm(vk::ImageView view, vk::ImageLayout layout)
+    void RenderPassInfoHolder::set_depth_atchm(vk::ImageView view, vk::ImageLayout layout, bool clear)
     {
-        depth_stencil_.imageView = view;
-        depth_stencil_.imageLayout = layout;
-        depth_stencil_.loadOp = vk::AttachmentLoadOp::eClear;
-        depth_stencil_.storeOp = vk::AttachmentStoreOp::eStore;
-        depth_stencil_.clearValue.setDepthStencil({1.0f, 0u});
+        depth_.imageView = view;
+        depth_.imageLayout = layout;
+        depth_.loadOp = clear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
+        depth_.storeOp = vk::AttachmentStoreOp::eStore;
+        depth_.clearValue.setDepthStencil({1.0f, 0u});
+    }
+
+    void RenderPassInfoHolder::set_stencil_atchm(vk::ImageView view, vk::ImageLayout layout, bool clear)
+    {
+        stencil_.imageView = view;
+        stencil_.imageLayout = layout;
+        stencil_.loadOp = clear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
+        stencil_.storeOp = vk::AttachmentStoreOp::eStore;
+        stencil_.clearValue.setDepthStencil({1.0f, 0u});
     }
 
     vk::RenderingInfo RenderPassInfoHolder::create_render_pass_info(vk::Rect2D extent, uint32_t layers)
@@ -112,9 +121,8 @@ namespace proj
         info.renderArea = extent;
         info.setColorAttachments(atchms_);
         info.layerCount = layers;
-        info.pDepthAttachment = depth_stencil_.imageView ? &depth_stencil_ : nullptr;
-        info.pStencilAttachment = depth_stencil_.imageView ? &depth_stencil_ : nullptr;
+        info.pDepthAttachment = depth_.imageView ? &depth_ : nullptr;
+        info.pStencilAttachment = stencil_.imageView ? &stencil_ : nullptr;
         return info;
     }
-
 } // namespace proj
