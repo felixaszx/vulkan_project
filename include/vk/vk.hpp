@@ -1,9 +1,11 @@
 #ifndef VK_VK_HPP
 #define VK_VK_HPP
 
+#include <iostream>
+#include <format>
 #include <vulkan/vulkan.hpp>
 
-#define GET_TRY_VK_FUNC(_0, _1, NAME, ...) NAME
+#define GET_TRY_VK_FUNC(_0, _1, _2, NAME, ...) NAME
 #define try_vk0(statement)                                               \
     try                                                                  \
     {                                                                    \
@@ -22,7 +24,16 @@
     {                                                                             \
         std::cerr << std::format("[Vulkan exception, {}] {}\n\n", msg, e.what()); \
     }
-#define try_vk(...) GET_TRY_VK_FUNC(__VA_ARGS__, try_vk1, try_vk0)(__VA_ARGS__);
+#define try_vk2(statement, msg, ret)                                              \
+    try                                                                           \
+    {                                                                             \
+        statement;                                                                \
+    }                                                                             \
+    catch (const std::exception& e)                                               \
+    {                                                                             \
+        ret;                                                                      \
+    }
+#define try_vk(...) GET_TRY_VK_FUNC(__VA_ARGS__, try_vk2, try_vk1, try_vk0)(__VA_ARGS__);
 
 namespace proj
 {
