@@ -258,9 +258,7 @@ namespace proj
             }
         }
 
-        uint32_t image_count = (capabilities.minImageCount + 1 > capabilities.maxImageCount) //
-                                   ? capabilities.maxImageCount                              //
-                                   : capabilities.minImageCount + 1;
+        uint32_t image_count = 2;
 
         vk::SwapchainCreateInfoKHR swapchain_create_info{};
         swapchain_create_info.surface = surface;
@@ -299,7 +297,7 @@ namespace proj
 
     void Swapchain::destory()
     {
-        if (views_[0] != nullptr)
+        if (views_[0])
         {
             destroy_image_views();
         }

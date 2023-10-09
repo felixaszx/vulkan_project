@@ -126,4 +126,9 @@ namespace proj
     {
         memcpy(matric_buffer_->mapping(), instance_matrices_.data(), sizeof(glm::mat4) * instance_matrices_.size());
     }
+
+    Mesh::Mesh(MeshDataHolder& holder, vk::DeviceSize vert_offset, vk::DeviceSize index_offset, uint32_t indices_count_)
+        : holder_(holder)
+    {
+    }
 }; // namespace proj
