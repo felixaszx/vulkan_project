@@ -7,7 +7,7 @@
 int main(int argc, char* argv[])
 {
     using namespace proj;
-    Window w(800, 600);
+    Window w(1024, 768);
     auto exts = w.get_instance_exts();
 
     Contex c(exts);
@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     vk::Device device = device_detail.device_;
     vma::Allocator allocator = device_detail.allocator_;
 
-    Swapchain swapchian(c.instance(), device_detail, surface, {1920, 1080});
+    Swapchain swapchian(c.instance(), device_detail, surface, {1024, 768});
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
