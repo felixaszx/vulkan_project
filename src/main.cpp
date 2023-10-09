@@ -70,6 +70,8 @@ int main(int argc, char* argv[])
         }
     }
 
+    device.destroyCommandPool(pool);
+
     swapchian.destroy_image_views();
     swapchian.destory();
     c.instance().destroySurfaceKHR(surface);

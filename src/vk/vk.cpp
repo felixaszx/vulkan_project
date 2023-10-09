@@ -115,6 +115,7 @@ namespace proj
 
     DeviceDetail::~DeviceDetail()
     {
+        allocator_.destroy();
         device_.destroy();
     }
 
