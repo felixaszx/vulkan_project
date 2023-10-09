@@ -43,8 +43,11 @@ namespace proj
 
       private:
         MeshDataHolder& holder_;
+        vk::DeviceSize vert_offset_ = 0;
+        vk::DeviceSize index_offset_ = 0;
+        uint32_t indices_count_ = 0;
 
-        Mesh(MeshDataHolder& holder);
+        Mesh(MeshDataHolder& holder, vk::DeviceSize vert_offset, vk::DeviceSize index_offset, uint32_t indices_count_);
 
       public:
         void draw_instanced(vk::CommandBuffer cmd, uint32_t instance_count = 1);

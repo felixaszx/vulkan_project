@@ -299,7 +299,7 @@ namespace proj
 
     void Swapchain::destory()
     {
-        if (views_[0] != nullptr)
+        if (views_[0])
         {
             destroy_image_views();
         }
