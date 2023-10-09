@@ -3,6 +3,7 @@
 #include "render.hpp"
 #include "resources.hpp"
 #include "mesh.hpp"
+#include "assimps.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -31,9 +32,7 @@ int main(int argc, char* argv[])
     cmd_info.commandPool = pool;
     vk::CommandBuffer cmd = device.allocateCommandBuffers(cmd_info)[0];
 
-    std::vector<glm::vec3> test_vec3_arr(10);
-    MeshDataHolder mesh_test(allocator, device_detail.queue_.graphics_, cmd, //
-                             test_vec3_arr, test_vec3_arr, test_vec3_arr, test_vec3_arr);
+    struct MeshDataLoader mesh_loader("")
 
     bool running = true;
     while (running)

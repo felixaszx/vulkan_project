@@ -40,7 +40,7 @@ namespace proj
         void* mapping_ = nullptr;
 
       public:
-        const size_t size_ = 0;
+        const vk::DeviceSize size_ = 0;
 
         Buffer(vma::Allocator allocator,                //
                const vk::BufferCreateInfo& buffer_info, //
