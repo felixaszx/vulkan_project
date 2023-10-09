@@ -7,7 +7,7 @@
 int main(int argc, char* argv[])
 {
     using namespace proj;
-    Window w(1920, 1080);
+    Window w(800, 600);
     auto exts = w.get_instance_exts();
 
     Contex c(exts);
