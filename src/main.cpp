@@ -32,8 +32,17 @@ int main(int argc, char* argv[])
     cmd_info.commandPool = pool;
     vk::CommandBuffer cmd = device.allocateCommandBuffers(cmd_info)[0];
 
-    struct MeshDataLoader mesh_loader("")
-
+    MeshDataLoader mesh_loader("res/model/sponza/sponza.obj");
+    MeshDataHolder mesh_holder(allocator, device_detail.queue_.graphics_, cmd, //
+                               mesh_loader.positions_,                         //
+                               mesh_loader.normals_,                           //
+                               mesh_loader.uvs_,                               //
+                               mesh_loader.colors_);
+    std::vector<Mesh> meshes = mesh_holder.get_meshes(device_detail.queue_.graphics_, cmd, //
+                                                      mesh_loader.meshes_indices_,         //
+                                                      mesh_loader.meshes_indices_count_,   //
+                                                      mesh_loader.meshes_vert_count_,      //
+                                                      10);
     bool running = true;
     while (running)
     {

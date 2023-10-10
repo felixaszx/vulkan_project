@@ -25,21 +25,26 @@ namespace proj
             }
 
             meshes_vert_count_.push_back(mesh->mNumVertices);
-            positions_.resize(mesh->mNumVertices);
-            normals_.resize(mesh->mNumVertices);
-            uvs_.resize(mesh->mNumVertices);
-            colors_.resize(mesh->mNumVertices);
-            memcpy(positions_.data(), mesh->mVertices, mesh->mNumVertices * sizeof(glm::vec3));
-            memcpy(normals_.data(), mesh->mNormals, mesh->mNumVertices * sizeof(glm::vec3));
+
+            size_t curr_size = positions_.size();
+            positions_.resize(curr_size + mesh->mNumVertices);
+            normals_.resize(curr_size + mesh->mNumVertices);
+            uvs_.resize(curr_size + mesh->mNumVertices);
+            colors_.resize(curr_size + mesh->mNumVertices);
+
+            memcpy(positions_.data() + curr_size, mesh->mVertices, mesh->mNumVertices * sizeof(glm::vec3));
+            memcpy(normals_.data() + curr_size, mesh->mNormals, mesh->mNumVertices * sizeof(glm::vec3));
 
             if (mesh->mTextureCoords[0] == nullptr)
             {
-                std::fill(uvs_.begin(), uvs_.end(), glm::vec3(0.0f, 0.0f, 0.0f));
+                std::fill(uvs_.begin() + curr_size, uvs_.end(), //
+                          glm::vec3(0.0f, 0.0f, 0.0f));
             }
 
             if (mesh->mColors[0] == nullptr)
             {
-                std::fill(colors_.begin(), colors_.end(), glm::vec3(1.0f, 1.0f, 1.0f));
+                std::fill(colors_.begin() + curr_size, colors_.end(), //
+                          glm::vec3(1.0f, 1.0f, 1.0f));
             }
         }
     }
