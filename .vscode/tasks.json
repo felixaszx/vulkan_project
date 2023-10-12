@@ -97,9 +97,9 @@
                 "clear": false
             },
             "dependsOn": [
+                "glslc",
                 "CMake: configure",
                 "CMake: build",
-                //"glslc",
                 //"add dlls info",
                 //"copy dlls"
             ]
@@ -119,9 +119,9 @@
             },
             "dependsOrder": "sequence",
             "dependsOn": [
+                "glslc",
                 "CMake: configure",
                 "CMake: build",
-                // "glslc",
             ]
         }
     ]

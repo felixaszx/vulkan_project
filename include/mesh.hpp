@@ -4,6 +4,7 @@
 #include <memory>
 #include "resources.hpp"
 #include "glms.hpp"
+#include "ext/buffer.hpp"
 
 namespace proj
 {
@@ -27,7 +28,7 @@ namespace proj
         MeshDataHolder(vma::Allocator allocator, vk::Queue graphics, vk::CommandBuffer cmd, //
                        const std::vector<glm::vec3>& positions,                             //
                        const std::vector<glm::vec3>& normals,                               //
-                       const std::vector<glm::vec3>& uvs,                                  //
+                       const std::vector<glm::vec3>& uvs,                                   //
                        const std::vector<glm::vec3>& colors);
         ~MeshDataHolder();
 
@@ -37,8 +38,8 @@ namespace proj
                                      const std::vector<uint32_t>& meshes_vert_count,    //
                                      uint32_t instance_count = 1);
 
-        static std::vector<vk::VertexInputBindingDescription> vertex_bindings();
-        static std::vector<vk::VertexInputAttributeDescription> vertex_attributes();
+        static const std::vector<vk::VertexInputBindingDescription> vertex_bindings();
+        static const std::vector<vk::VertexInputAttributeDescription> vertex_attributes();
 
         uint32_t mesh_size() const { return mesh_size_; }
         void update_instance_matrices();

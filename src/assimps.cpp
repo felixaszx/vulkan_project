@@ -40,11 +40,19 @@ namespace proj
                 std::fill(uvs_.begin() + curr_size, uvs_.end(), //
                           glm::vec3(0.0f, 0.0f, 0.0f));
             }
+            else
+            {
+                memcpy(uvs_.data() + curr_size, mesh->mTextureCoords[0], mesh->mNumVertices * sizeof(glm::vec3));
+            }
 
             if (mesh->mColors[0] == nullptr)
             {
                 std::fill(colors_.begin() + curr_size, colors_.end(), //
                           glm::vec3(1.0f, 1.0f, 1.0f));
+            }
+            else
+            {
+                memcpy(uvs_.data() + curr_size, mesh->mColors[0], mesh->mNumVertices * sizeof(glm::vec3));
             }
         }
     }

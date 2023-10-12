@@ -9,11 +9,15 @@ namespace proj
     //
     //
 
+    void Image::set_zero()
+    {
+        memset(this, 0x0, sizeof(Image));
+    }
+
     Image::Image(vma::Allocator allocator,              //
                  const vk::ImageCreateInfo& image_info, //
                  const vma::AllocationCreateInfo& alloc_info)
-        : vma::Allocator(allocator),
-          image_format_(image_info.format)
+        : vma::Allocator(allocator)
     {
         vma::AllocationInfo finish_info{};
         auto result = allocator.createImage(image_info, alloc_info, finish_info);
@@ -31,10 +35,23 @@ namespace proj
         create_image_view(view_info);
     }
 
+    Image::Image(Image&& image)
+        : vk::Image(image),
+          vk::ImageView(image),
+          vk::DeviceMemory(image),
+          vma::Allocator(image),
+          vma::Allocation(image)
+    {
+        image.set_zero();
+    }
+
     Image::~Image()
     {
-        destroy_image_view();
-        static_cast<vma::Allocator&>(*this).destroyImage(*this, *this);
+        if (static_cast<vma::Allocator&>(*this))
+        {
+            destroy_image_view();
+            static_cast<vma::Allocator&>(*this).destroyImage(*this, *this);
+        }
     }
 
     void Image::create_image_view(vk::ImageViewCreateInfo view_info)
@@ -47,7 +64,7 @@ namespace proj
 
     void Image::destroy_image_view()
     {
-        if (static_cast<vk::ImageView&>(*this))
+        if (static_cast<vk::ImageView>(*this))
         {
             static_cast<vma::Allocator&>(*this)
                 .getAllocatorInfo() //
@@ -61,6 +78,11 @@ namespace proj
     // Buffer class
     //
     //
+
+    void Buffer::set_zero()
+    {
+        memset(this, 0x0, sizeof(Buffer));
+    }
 
     Buffer::Buffer(vma::Allocator allocator,                //
                    const vk::BufferCreateInfo& buffer_info, //
@@ -84,11 +106,26 @@ namespace proj
         create_buffer_view(view_info);
     }
 
+    Buffer::Buffer(Buffer&& buffer)
+        : vk::Buffer(buffer),
+          vk::BufferView(buffer),
+          vk::DeviceMemory(buffer),
+          vma::Allocation(buffer),
+          vma::Allocator(buffer),
+          size_(buffer.size_),
+          mapping_(buffer.mapping_)
+    {
+        buffer.set_zero();
+    }
+
     Buffer::~Buffer()
     {
-        unmap_memory();
-        destroy_buffer_view();
-        static_cast<vma::Allocator&>(*this).destroyBuffer(*this, *this);
+        if (static_cast<vma::Allocator>(*this))
+        {
+            unmap_memory();
+            destroy_buffer_view();
+            static_cast<vma::Allocator&>(*this).destroyBuffer(*this, *this);
+        }
     }
 
     void Buffer::create_buffer_view(vk::BufferViewCreateInfo view_info)

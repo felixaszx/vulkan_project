@@ -88,7 +88,7 @@ namespace proj
         DeviceDetail create_device(vk::Instance instance);
     };
 
-    class Swapchain : vk::SwapchainKHR
+    class Swapchain : public vk::SwapchainKHR
     {
       private:
         vk::Device device_ = nullptr;
@@ -102,6 +102,8 @@ namespace proj
         void destory();
 
         void destroy_image_views();
+        void layout_transition(vk::CommandBuffer cmd, vk::Queue graphics, //
+                               vk::ImageLayout target_layout = vk::ImageLayout::eColorAttachmentOptimal);
     };
 }; // namespace proj
 

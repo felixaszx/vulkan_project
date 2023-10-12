@@ -4,6 +4,8 @@
 #include "resources.hpp"
 #include "mesh.hpp"
 #include "assimps.hpp"
+#include "pipeline_layout.hpp"
+#include "ext/buffer.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -20,8 +22,6 @@ int main(int argc, char* argv[])
     vk::Device device = device_detail.device_;
     vma::Allocator allocator = device_detail.allocator_;
 
-    Swapchain swapchian(c.instance(), device_detail, surface, {1024, 768});
-
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
     vk::CommandPool pool = device.createCommandPool(pool_info);
@@ -31,6 +31,9 @@ int main(int argc, char* argv[])
     cmd_info.commandBufferCount = 1;
     cmd_info.commandPool = pool;
     vk::CommandBuffer cmd = device.allocateCommandBuffers(cmd_info)[0];
+
+    Swapchain swapchian(c.instance(), device_detail, surface, {1024, 768});
+    swapchian.layout_transition(cmd, device_detail.queue_.graphics_, vk::ImageLayout::ePresentSrcKHR);
 
     MeshDataLoader mesh_loader("res/model/sponza/sponza.obj");
     MeshDataHolder mesh_holder(allocator, device_detail.queue_.graphics_, cmd, //
@@ -43,6 +46,7 @@ int main(int argc, char* argv[])
                                                       mesh_loader.meshes_indices_count_,   //
                                                       mesh_loader.meshes_vert_count_,      //
                                                       10);
+
     bool running = true;
     while (running)
     {
@@ -78,6 +82,7 @@ int main(int argc, char* argv[])
         }
     }
 
+    device.waitIdle();
     device.destroyCommandPool(pool);
 
     swapchian.destroy_image_views();

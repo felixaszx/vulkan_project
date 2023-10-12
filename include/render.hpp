@@ -2,6 +2,7 @@
 #define INCLUDE_RENDER_HPP
 
 #include <thread>
+#include <fstream>
 #include "vk/vk.hpp"
 
 namespace proj
@@ -23,11 +24,11 @@ namespace proj
         RenderLoop(vk::Device device);
         ~RenderLoop();
 
+        [[nodiscard]]
+        vk::CommandBuffer get_cmd();
         vk::Semaphore get_curr_image_sem();
         vk::Semaphore get_curr_submit_sem();
         bool wait_for_curr_frame();
-
-        vk::CommandBuffer begin_cmd();
         void submit(vk::Queue graphics_queue, bool double_buffering = false);
         void end_cmd();
     };
@@ -41,14 +42,51 @@ namespace proj
 
       public:
         void add_color_atchm(vk::ImageView view, //
-                             vk::ImageLayout layout = vk::ImageLayout::eColorAttachmentOptimal);
+                             vk::ImageLayout layout = vk::ImageLayout::eColorAttachmentOptimal,
+                             bool clear_on_load = false, vk::ClearColorValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f});
         void set_depth_atchm(vk::ImageView view,                                                //
                              vk::ImageLayout layout = vk::ImageLayout::eDepthAttachmentOptimal, //
-                             bool clear = false);
+                             bool clear_on_load = false);
         void set_stencil_atchm(vk::ImageView view,                                                  //
                                vk::ImageLayout layout = vk::ImageLayout::eStencilAttachmentOptimal, //
-                               bool clear = false);
-        vk::RenderingInfo create_rendering_info(vk::Rect2D extent, uint32_t layers = 1);
+                               bool clear_on_load = false);
+        vk::RenderingInfo create_rendering_info(vk::Extent2D extent, uint32_t layers = 1);
+    };
+
+    class ShaderModule : public vk::Device,       //
+                         public vk::ShaderModule, //
+                         public vk::PipelineShaderStageCreateInfo
+    {
+      private:
+        const std::string entry_;
+        void set_zero();
+
+      public:
+        ShaderModule(vk::Device device, const std::string& file_name, //
+                     vk::ShaderStageFlagBits stage, const std::string& entry = "main");
+        ShaderModule(ShaderModule&& shader);
+        ~ShaderModule();
+    };
+
+    struct GraphicsPipelineBuilder
+    {
+        vk::PipelineVertexInputStateCreateInfo input_state_{};
+        vk::PipelineViewportStateCreateInfo viewport_state_{};
+        vk::PipelineRasterizationStateCreateInfo rasterizer_state_{};
+        vk::PipelineColorBlendStateCreateInfo blend_state_{};
+        vk::PipelineDepthStencilStateCreateInfo depth_state_{};
+        vk::PipelineInputAssemblyStateCreateInfo input_assembly_{};
+        vk::PipelineMultisampleStateCreateInfo multisample_state_{};
+        vk::PipelineDynamicStateCreateInfo dynamic_states_{};
+        vk::PipelineRenderingCreateInfo rendering_info_{};
+
+        ShaderModule* vert_ = nullptr;
+        ShaderModule* geom_ = nullptr;
+        ShaderModule* frag_ = nullptr;
+
+        GraphicsPipelineBuilder();
+
+        vk::Pipeline create_graphics_pipeline(vk::Device device, vk::PipelineLayout layout);
     };
 } // namespace proj
 

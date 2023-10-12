@@ -195,12 +195,17 @@ namespace proj
         feature_.geometryShader = true;
 
         device_ext_names_.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+        device_ext_names_.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
         if (debug)
         {
             device_layer_names_.push_back("VK_LAYER_KHRONOS_validation");
         }
 
+        vk::PhysicalDeviceDynamicRenderingFeaturesKHR dynamic_rendering_feature{};
+        dynamic_rendering_feature.dynamicRendering = true;
+
         vk::DeviceCreateInfo device_create_info{};
+        device_create_info.pNext = &dynamic_rendering_feature;
         device_create_info.pEnabledFeatures = &feature_;
         device_create_info.setQueueCreateInfos(queue_create_infos);
         device_create_info.setPEnabledExtensionNames(device_ext_names_);
@@ -313,5 +318,34 @@ namespace proj
             device_.destroyImageView(view);
             view = nullptr;
         }
+    }
+
+    void Swapchain::layout_transition(vk::CommandBuffer cmd, vk::Queue graphics, //
+                                      vk::ImageLayout target_layout)
+    {
+        vk::CommandBufferBeginInfo begin{};
+        begin.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+        cmd.begin(begin);
+        for (auto image : images_)
+        {
+            vk::ImageMemoryBarrier barrier{};
+            barrier.image = image;
+            barrier.newLayout = target_layout;
+            barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+            barrier.subresourceRange.baseMipLevel = 0;
+            barrier.subresourceRange.levelCount = 1;
+            barrier.subresourceRange.baseArrayLayer = 0;
+            barrier.subresourceRange.layerCount = 1;
+
+            cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eBottomOfPipe, //
+                                {}, {}, {}, barrier);
+        }
+        cmd.end();
+
+        vk::SubmitInfo submit{};
+        submit.setCommandBuffers(cmd);
+        graphics.submit(submit);
+        graphics.waitIdle();
+        cmd.reset();
     }
 }; // namespace proj

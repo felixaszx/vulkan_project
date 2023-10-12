@@ -12,7 +12,7 @@ namespace proj
                   public vma::Allocator
     {
       private:
-        vk::Format image_format_ = {};
+        void set_zero();
 
       public:
         Image(vma::Allocator allocator,              //
@@ -22,12 +22,11 @@ namespace proj
               const vk::ImageCreateInfo& image_info,       //
               const vma::AllocationCreateInfo& alloc_info, //
               vk::ImageViewCreateInfo view_info);
+        Image(Image&& image);
         ~Image();
 
         void create_image_view(vk::ImageViewCreateInfo view_info);
         void destroy_image_view();
-
-        vk::Format image_format() const { return image_format_; }
     };
 
     class Buffer : public vk::Buffer,       //
@@ -38,6 +37,7 @@ namespace proj
     {
       private:
         void* mapping_ = nullptr;
+        void set_zero();
 
       public:
         const vk::DeviceSize size_ = 0;
@@ -49,6 +49,7 @@ namespace proj
                const vk::BufferCreateInfo& buffer_info,     //
                const vma::AllocationCreateInfo& alloc_info, //
                vk::BufferViewCreateInfo view_info);
+        Buffer(Buffer&& buffer);
         ~Buffer();
 
         void create_buffer_view(vk::BufferViewCreateInfo view_info);
