@@ -50,7 +50,7 @@ namespace proj
         return submit_sems_[frame_];
     }
 
-    bool RenderLoop::wait_for_curr_frame()
+    bool RenderLoop::wait_for_last_frame()
     {
         try_vk(auto result = device_.waitForFences(frame_fence_[frame_], true, UINT64_MAX), //
                "",                                                                          //

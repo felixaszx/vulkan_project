@@ -28,7 +28,7 @@ namespace proj
         vk::CommandBuffer get_cmd();
         vk::Semaphore get_curr_image_sem();
         vk::Semaphore get_curr_submit_sem();
-        bool wait_for_curr_frame();
+        bool wait_for_last_frame();
         void submit(vk::Queue graphics_queue, bool double_buffering = false);
         void end_cmd();
     };
