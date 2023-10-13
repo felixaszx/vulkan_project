@@ -83,5 +83,25 @@ namespace proj
         {
             create_info.format = format_;
         }
+
+        SampledImage::SampledImage(vk::ImageType type)
+            : type_(type)
+        {
+        }
+
+        void SampledImage::operator()(vk::ImageCreateInfo& create_info)
+        {
+            create_info.imageType = type_;
+            create_info.mipLevels = 1;
+            create_info.arrayLayers = 1;
+            create_info.format = vk::Format::eR8G8B8A8Srgb;
+            create_info.tiling = vk::ImageTiling::eOptimal;
+            create_info.initialLayout = vk::ImageLayout::eUndefined;
+            create_info.sharingMode = vk::SharingMode::eExclusive;
+            create_info.samples = vk::SampleCountFlagBits::e1;
+            create_info.usage = vk::ImageUsageFlagBits::eTransferDst | //
+                                vk::ImageUsageFlagBits::eTransferSrc | //
+                                vk::ImageUsageFlagBits::eSampled;
+        }
     }; // namespace ext
 };     // namespace proj

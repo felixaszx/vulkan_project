@@ -56,13 +56,13 @@ namespace proj
                "",                                                                          //
                return false);
         device_.resetFences(frame_fence_[frame_]);
+        main_cmds_[frame_].reset();
 
         return true;
     }
 
     vk::CommandBuffer RenderLoop::get_cmd()
     {
-        main_cmds_[frame_].reset();
         return main_cmds_[frame_];
     }
 

@@ -89,6 +89,13 @@ namespace proj
             void operator()(vk::ImageCreateInfo& create_info);
         };
 
+        struct SampledImage
+        {
+            vk::ImageType type_ = vk::ImageType::e2D;
+            SampledImage(vk::ImageType type = vk::ImageType::e2D);
+            void operator()(vk::ImageCreateInfo& create_info);
+        };
+
     }; // namespace ext
 };     // namespace proj
 

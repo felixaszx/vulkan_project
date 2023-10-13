@@ -7,9 +7,11 @@
 #include "ext/buffer.hpp"
 #include "ext/image.hpp"
 #include "render/mesh.hpp"
+#include "render/material.hpp"
 
 int main(int argc, char* argv[])
 {
+    stbi_set_flip_vertically_on_load(true);
     using namespace proj;
     Window w(1024, 768);
     auto exts = w.get_instance_exts();
@@ -39,23 +41,23 @@ int main(int argc, char* argv[])
     Swapchain swapchian(c.instance(), device_detail, surface, {1024, 768});
     swapchian.layout_transition(cmd, device_detail.queue_.graphics_, vk::ImageLayout::ePresentSrcKHR);
 
-    MeshDataLoader mesh_loader("res/model/sponza/sponza.obj");
-    render::MeshData mesh_data(allocator, device_detail.queue_.graphics_, cmd, //
-                               mesh_loader.positions_,                         //
-                               mesh_loader.normals_,                           //
-                               mesh_loader.uvs_,                               //
-                               mesh_loader.colors_);
-    std::vector<render::Mesh> meshes = mesh_data.get_meshes(device_detail.queue_.graphics_, cmd, //
-                                                            mesh_loader.meshes_indices_,         //
-                                                            mesh_loader.meshes_indices_count_,   //
-                                                            mesh_loader.meshes_vert_count_,      //
-                                                            10);
+    int x, y, chan;
+    auto pixels = stbi_load("res/textures/ayaka.png", &x, &y, &chan, STBI_rgb_alpha);
 
-    ext::ImageCreator image_creator(device_detail.allocator_,            //
-                                    ext::ColorAtchm(vk::ImageType::e2D), //
-                                    ext::device_local);
-    Image image(image_creator.create({1024, 768, 1}));
+    vk::SamplerCreateInfo sampler_cinfo{};
+    sampler_cinfo.anisotropyEnable = true;
+    sampler_cinfo.maxAnisotropy = 4;
+    sampler_cinfo.borderColor = vk::BorderColor::eFloatOpaqueBlack;
+    sampler_cinfo.maxLod = 1000.0f;
+    sampler_cinfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+    sampler_cinfo.magFilter = vk::Filter::eLinear;
+    sampler_cinfo.minFilter = vk::Filter::eLinear;
+    vk::Sampler sampler = device.createSampler(sampler_cinfo);
 
+    render::Material mat(allocator, device_detail.queue_.graphics_, cmd, //
+                         render::Material::LoadEmissive(sampler, pixels, {uint32_t(x), uint32_t(y), uint32_t(chan)}));
+
+    RenderLoop loop(device, device_detail.queue_index_.graphics_);
     bool running = true;
     while (running)
     {
@@ -88,6 +90,23 @@ int main(int argc, char* argv[])
             {
                 running = false;
             }
+
+            loop.wait_for_last_frame();
+            uint32_t i = device.acquireNextImageKHR(swapchian, UINT64_MAX, loop.get_curr_image_sem()).value;
+
+            vk::CommandBufferBeginInfo begin{};
+            loop.get_cmd().begin(begin);
+            loop.end_cmd();
+            loop.submit(device_detail.queue_.graphics_);
+
+            uint32_t a[] = {i};
+            vk::Semaphore wait_sems[] = {loop.get_curr_submit_sem()};
+            vk::PresentInfoKHR present_info{};
+            present_info.setWaitSemaphores(wait_sems);
+            present_info.pSwapchains = &swapchian;
+            present_info.swapchainCount = 1;
+            present_info.setImageIndices(a);
+            auto k = device_detail.queue_.graphics_.presentKHR(present_info);
         }
     }
 
