@@ -12,6 +12,15 @@ namespace proj
     {
         struct Material
         {
+            std::unique_ptr<Image> abledo_ = nullptr;
+            std::unique_ptr<Image> specular_ = nullptr;
+            std::unique_ptr<Image> ambient_ = nullptr;
+            std::unique_ptr<Image> opacity_ = nullptr;
+            std::unique_ptr<Image> normal_ = nullptr;
+            std::unique_ptr<Image> emissive_ = nullptr;
+
+            void create_general();
+            void create_mipmapped();
         };
     }; // namespace render
 };     // namespace proj

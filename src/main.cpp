@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+    pool_info.queueFamilyIndex = device_detail.queue_index_.graphics_;
     vk::CommandPool pool = device.createCommandPool(pool_info);
 
     vk::CommandBufferAllocateInfo cmd_info{};
@@ -45,10 +46,10 @@ int main(int argc, char* argv[])
                                mesh_loader.uvs_,                               //
                                mesh_loader.colors_);
     std::vector<render::Mesh> meshes = mesh_data.get_meshes(device_detail.queue_.graphics_, cmd, //
-                                                      mesh_loader.meshes_indices_,         //
-                                                      mesh_loader.meshes_indices_count_,   //
-                                                      mesh_loader.meshes_vert_count_,      //
-                                                      10);
+                                                            mesh_loader.meshes_indices_,         //
+                                                            mesh_loader.meshes_indices_count_,   //
+                                                            mesh_loader.meshes_vert_count_,      //
+                                                            10);
 
     ext::ImageCreator image_creator(device_detail.allocator_,            //
                                     ext::ColorAtchm(vk::ImageType::e2D), //

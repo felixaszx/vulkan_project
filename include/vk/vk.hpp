@@ -74,6 +74,13 @@ namespace proj
             vk::Queue compute_ = nullptr;
         } queue_;
 
+        struct
+        {
+            uint32_t graphics_ = 0;
+            uint32_t transfer_ = 0;
+            uint32_t compute_ = 0;
+        } queue_index_;
+
         ~DeviceDetail();
     };
 

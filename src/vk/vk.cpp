@@ -135,6 +135,7 @@ namespace proj
             if (queue_properties[index].queueFlags & vk::QueueFlagBits::eGraphics)
             {
                 queue_count++;
+                detail.queue_index_.graphics_ = index;
                 queue_indices[0] = index;
                 break;
             }
@@ -149,6 +150,7 @@ namespace proj
                 index != queue_indices[0])
             {
                 queue_count++;
+                detail.queue_index_.compute_ = index;
                 queue_indices[1] = index;
                 break;
             }
@@ -161,6 +163,7 @@ namespace proj
                 index != queue_indices[1])
             {
                 queue_count++;
+                detail.queue_index_.transfer_ = index;
                 queue_indices[2] = index;
                 break;
             }
