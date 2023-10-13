@@ -2,16 +2,19 @@
 #include "vk/vk.hpp"
 #include "render.hpp"
 #include "resources.hpp"
-#include "mesh.hpp"
 #include "assimps.hpp"
 #include "pipeline_layout.hpp"
 #include "ext/buffer.hpp"
+#include "ext/image.hpp"
+#include "render/mesh.hpp"
 
 int main(int argc, char* argv[])
 {
     using namespace proj;
     Window w(1024, 768);
     auto exts = w.get_instance_exts();
+
+    const int a = 1;
 
     Contex c(exts);
 
@@ -36,16 +39,21 @@ int main(int argc, char* argv[])
     swapchian.layout_transition(cmd, device_detail.queue_.graphics_, vk::ImageLayout::ePresentSrcKHR);
 
     MeshDataLoader mesh_loader("res/model/sponza/sponza.obj");
-    MeshDataHolder mesh_holder(allocator, device_detail.queue_.graphics_, cmd, //
+    render::MeshData mesh_data(allocator, device_detail.queue_.graphics_, cmd, //
                                mesh_loader.positions_,                         //
                                mesh_loader.normals_,                           //
                                mesh_loader.uvs_,                               //
                                mesh_loader.colors_);
-    std::vector<Mesh> meshes = mesh_holder.get_meshes(device_detail.queue_.graphics_, cmd, //
+    std::vector<render::Mesh> meshes = mesh_data.get_meshes(device_detail.queue_.graphics_, cmd, //
                                                       mesh_loader.meshes_indices_,         //
                                                       mesh_loader.meshes_indices_count_,   //
                                                       mesh_loader.meshes_vert_count_,      //
                                                       10);
+
+    ext::ImageCreator image_creator(device_detail.allocator_,            //
+                                    ext::ColorAtchm(vk::ImageType::e2D), //
+                                    ext::device_local);
+    Image image(image_creator.create({1024, 768, 1}));
 
     bool running = true;
     while (running)
