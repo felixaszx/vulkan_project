@@ -2,7 +2,7 @@
 
 namespace proj
 {
-    RenderLoop::RenderLoop(vk::Device device)
+    RenderLoop::RenderLoop(vk::Device device, uint32_t graphic_queue_index)
         : device_(device)
     {
         for (int i = 0; i < 2; i++)
@@ -18,6 +18,7 @@ namespace proj
 
         vk::CommandPoolCreateInfo cmd_pool_info{};
         cmd_pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+        cmd_pool_info.queueFamilyIndex = graphic_queue_index;
         cmd_pool_ = device.createCommandPool(cmd_pool_info);
 
         vk::CommandBufferAllocateInfo cmd_alloc_info{};

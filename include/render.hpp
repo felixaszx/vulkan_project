@@ -21,7 +21,7 @@ namespace proj
         std::vector<vk::CommandBuffer> main_cmds_{2};
 
       public:
-        RenderLoop(vk::Device device);
+        RenderLoop(vk::Device device, uint32_t graphic_queue_index);
         ~RenderLoop();
 
         [[nodiscard]]
