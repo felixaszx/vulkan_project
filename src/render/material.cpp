@@ -5,10 +5,10 @@ namespace proj
 {
     namespace render
     {
-        void create_image_from_pixels(vma::Allocator allocator,                                  //
-                                      vk::Queue queue, vk::CommandBuffer cmd,                    //
-                                      ext::ImageCreator& creator, std::unique_ptr<Image>& image, //
-                                      uint32_t mip_levels, std::unique_ptr<Buffer>& staging,     //
+        void create_image_from_pixels(vma::Allocator allocator,                              //
+                                      vk::Queue queue, vk::CommandBuffer cmd,                //
+                                      ext::ImageCreator& creator, Material& mat,             //
+                                      uint32_t mip_levels, std::unique_ptr<Buffer>& staging, //
                                       const unsigned char* pixels, vk::Extent3D size)
         {
             using namespace ext;
@@ -20,7 +20,7 @@ namespace proj
             view_info.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
             view_info.subresourceRange.levelCount = mip_levels;
             view_info.subresourceRange.layerCount = 1;
-            image.reset(new Image(creator.create(vk::Extent3D(size.width, size.height, 1), view_info)));
+            mat.textures_.push_back(Image(creator.create(vk::Extent3D(size.width, size.height, 1), view_info)));
 
             BufferCreator staging_creator(allocator, host_seq, trans_src);
             staging.reset(new Buffer(staging_creator.create(size.width * size.height * size.depth)));
@@ -28,7 +28,7 @@ namespace proj
 
             // copy and layout transition infos
             vk::ImageMemoryBarrier barrier{};
-            barrier.image = *image;
+            barrier.image = mat.textures_.back();
             barrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
             barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
             barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -50,7 +50,7 @@ namespace proj
 
             cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, //
                                 {}, {}, {}, barrier);
-            cmd.copyBufferToImage(*staging, *image, vk::ImageLayout::eTransferDstOptimal, region);
+            cmd.copyBufferToImage(*staging, mat.textures_.back(), vk::ImageLayout::eTransferDstOptimal, region);
         }
 
         void layout_to_shader(vk::Queue queue, vk::CommandBuffer cmd, vk::Image image, uint32_t mip_levels)
@@ -130,154 +130,53 @@ namespace proj
             }
         }
 
-        Material::LoadAlbedo::LoadAlbedo(vk::Sampler sampler, unsigned char* pixels, vk::Extent3D size)
+        Material::load_general::load_general(vk::Sampler sampler, unsigned char* pixels, vk::Extent3D size)
             : sampler_(sampler),
               pixels_(pixels),
               size_(size)
         {
         }
 
-        void Material::LoadAlbedo::operator()(vma::Allocator allocator,               //
-                                              vk::Queue queue, vk::CommandBuffer cmd, //
-                                              Material& a)
+        void Material::load_general::operator()(vma::Allocator allocator,               //
+                                               vk::Queue queue, vk::CommandBuffer cmd, //
+                                               Material& a)
         {
             using namespace ext;
-            uint32_t mip_levels = std::floor(std::log2(std::max(size_.width, size_.height))) + 1;
-            a.image_creator_.update_flags(MipLevelsAndLayers(mip_levels));
+            a.image_creator_.update_flags(levels_and_layers(1));
 
             std::unique_ptr<Buffer> staging = nullptr;
-            create_image_from_pixels(allocator, queue, cmd, a.image_creator_, a.albedo_, mip_levels, staging, pixels_,
-                                     size_);
-
-            if (mip_levels > 1)
-            {
-                generate_mipmaps(cmd, *a.albedo_, {size_.width, size_.height}, mip_levels);
-            }
-
-            layout_to_shader(queue, cmd, *a.albedo_, mip_levels);
-            a.infos_[0].sampler = sampler_;
-            a.infos_[0].imageView = *a.albedo_;
+            create_image_from_pixels(allocator, queue, cmd, a.image_creator_, a, 1, staging, pixels_, size_);
+            layout_to_shader(queue, cmd, a.textures_.back(), 1);
+            a.infos_.push_back(
+                vk::DescriptorImageInfo(sampler_, a.textures_.back(), vk::ImageLayout::eShaderReadOnlyOptimal));
         }
 
-        Material::LoadSpecular::LoadSpecular(vk::Sampler sampler, unsigned char* pixels, vk::Extent3D size)
+        Material::load_mipmapped::load_mipmapped(vk::Sampler sampler, unsigned char* pixels, vk::Extent3D size)
             : sampler_(sampler),
               pixels_(pixels),
               size_(size)
         {
         }
 
-        void Material::LoadSpecular::operator()(vma::Allocator allocator,               //
-                                                vk::Queue queue, vk::CommandBuffer cmd, //
-                                                Material& a)
-        {
-            using namespace ext;
-            uint32_t mip_levels = std::floor(std::log2(std::max(size_.width, size_.height))) + 1;
-            a.image_creator_.update_flags(MipLevelsAndLayers(mip_levels));
-
-            std::unique_ptr<Buffer> staging = nullptr;
-            create_image_from_pixels(allocator, queue, cmd, a.image_creator_, a.specular_, mip_levels, staging, pixels_,
-                                     size_);
-
-            if (mip_levels > 1)
-            {
-                generate_mipmaps(cmd, *a.specular_, {size_.width, size_.height}, mip_levels);
-            }
-
-            layout_to_shader(queue, cmd, *a.specular_, mip_levels);
-            a.infos_[1].sampler = sampler_;
-            a.infos_[1].imageView = *a.specular_;
-        }
-
-        Material::LoadAmbient::LoadAmbient(vk::Sampler sampler, unsigned char* pixels, vk::Extent3D size)
-            : sampler_(sampler),
-              pixels_(pixels),
-              size_(size)
-        {
-        }
-
-        void Material::LoadAmbient::operator()(vma::Allocator allocator,               //
+        void Material::load_mipmapped::operator()(vma::Allocator allocator,               //
                                                vk::Queue queue, vk::CommandBuffer cmd, //
                                                Material& a)
         {
             using namespace ext;
             uint32_t mip_levels = std::floor(std::log2(std::max(size_.width, size_.height))) + 1;
-            a.image_creator_.update_flags(MipLevelsAndLayers(mip_levels));
+            a.image_creator_.update_flags(levels_and_layers(mip_levels));
 
             std::unique_ptr<Buffer> staging = nullptr;
-            create_image_from_pixels(allocator, queue, cmd, a.image_creator_, a.ambient_, mip_levels, staging, pixels_,
-                                     size_);
+            create_image_from_pixels(allocator, queue, cmd, a.image_creator_, a, mip_levels, staging, pixels_, size_);
 
             if (mip_levels > 1)
             {
-                generate_mipmaps(cmd, *a.ambient_, {size_.width, size_.height}, mip_levels);
+                generate_mipmaps(cmd, a.textures_.back(), {size_.width, size_.height}, mip_levels);
             }
 
-            layout_to_shader(queue, cmd, *a.ambient_, mip_levels);
-            a.infos_[2].sampler = sampler_;
-            a.infos_[2].imageView = *a.ambient_;
-        }
-
-        Material::LoadOpacity::LoadOpacity(vk::Sampler sampler, unsigned char* pixels, vk::Extent3D size)
-            : sampler_(sampler),
-              pixels_(pixels),
-              size_(size)
-        {
-        }
-
-        void Material::LoadOpacity::operator()(vma::Allocator allocator,               //
-                                               vk::Queue queue, vk::CommandBuffer cmd, //
-                                               Material& a)
-        {
-            using namespace ext;
-            a.image_creator_.update_flags(MipLevelsAndLayers(1));
-
-            std::unique_ptr<Buffer> staging = nullptr;
-            create_image_from_pixels(allocator, queue, cmd, a.image_creator_, a.opacity_, 1, staging, pixels_, size_);
-            layout_to_shader(queue, cmd, *a.opacity_, 1);
-            a.infos_[3].sampler = sampler_;
-            a.infos_[3].imageView = *a.opacity_;
-        }
-
-        Material::LoadNormal::LoadNormal(vk::Sampler sampler, unsigned char* pixels, vk::Extent3D size)
-            : sampler_(sampler),
-              pixels_(pixels),
-              size_(size)
-        {
-        }
-
-        void Material::LoadNormal::operator()(vma::Allocator allocator,               //
-                                              vk::Queue queue, vk::CommandBuffer cmd, //
-                                              Material& a)
-        {
-            using namespace ext;
-            a.image_creator_.update_flags(MipLevelsAndLayers(1));
-
-            std::unique_ptr<Buffer> staging = nullptr;
-            create_image_from_pixels(allocator, queue, cmd, a.image_creator_, a.normal_, 1, staging, pixels_, size_);
-            layout_to_shader(queue, cmd, *a.normal_, 1);
-            a.infos_[4].sampler = sampler_;
-            a.infos_[4].imageView = *a.normal_;
-        }
-
-        Material::LoadEmissive::LoadEmissive(vk::Sampler sampler, unsigned char* pixels, vk::Extent3D size)
-            : sampler_(sampler),
-              pixels_(pixels),
-              size_(size)
-        {
-        }
-
-        void Material::LoadEmissive::operator()(vma::Allocator allocator,               //
-                                                vk::Queue queue, vk::CommandBuffer cmd, //
-                                                Material& a)
-        {
-            using namespace ext;
-            a.image_creator_.update_flags(MipLevelsAndLayers(1));
-
-            std::unique_ptr<Buffer> staging = nullptr;
-            create_image_from_pixels(allocator, queue, cmd, a.image_creator_, a.emissive_, 1, staging, pixels_, size_);
-            layout_to_shader(queue, cmd, *a.emissive_, 1);
-            a.infos_[5].sampler = sampler_;
-            a.infos_[5].imageView = *a.emissive_;
+            layout_to_shader(queue, cmd, a.textures_.back(), mip_levels);
+            a.infos_.push_back(
+                vk::DescriptorImageInfo(sampler_, a.textures_.back(), vk::ImageLayout::eShaderReadOnlyOptimal));
         }
     }; // namespace render
 };     // namespace proj

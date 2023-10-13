@@ -23,6 +23,12 @@ namespace proj
             ImageCreator(vma::Allocator allocator, Nt&&... funcs)
                 : vma::Allocator(allocator)
             {
+                create_info_.mipLevels = 1;
+                create_info_.arrayLayers = 1;
+                create_info_.tiling = vk::ImageTiling::eOptimal;
+                create_info_.initialLayout = vk::ImageLayout::eUndefined;
+                create_info_.sharingMode = vk::SharingMode::eExclusive;
+                create_info_.samples = vk::SampleCountFlagBits::e1;
                 update_flags(std::forward<Nt>(funcs)...);
             }
 
@@ -52,48 +58,105 @@ namespace proj
         };
 
         // image create properties
+        inline void image_transfer_dst(vk::ImageCreateInfo& create_info)
+        {
+            create_info.usage ^= vk::ImageUsageFlagBits::eTransferDst;
+        }
+
+        inline void image_transfer_src(vk::ImageCreateInfo& create_info)
+        {
+            create_info.usage ^= vk::ImageUsageFlagBits::eTransferSrc;
+        }
+
         // properties funtors
-        struct ImageSampleCount
+        struct sample_counts
         {
             vk::SampleCountFlagBits sample_ = vk::SampleCountFlagBits::e1;
-            ImageSampleCount(vk::SampleCountFlagBits sample);
-            void operator()(vk::ImageCreateInfo& create_info);
+
+            sample_counts(vk::SampleCountFlagBits sample)
+                : sample_(sample)
+            {
+            }
+
+            void operator()(vk::ImageCreateInfo& create_info) { create_info.samples = sample_; }
         };
 
-        struct MipLevelsAndLayers
+        struct levels_and_layers
         {
             uint32_t levels_ = 1;
             uint32_t layers_ = 1;
-            MipLevelsAndLayers(uint32_t levels, uint32_t layers = 1);
-            void operator()(vk::ImageCreateInfo& create_info);
+
+            levels_and_layers(uint32_t levels, uint32_t layers = 1)
+                : levels_(levels),
+                  layers_(layers)
+            {
+            }
+
+            void operator()(vk::ImageCreateInfo& create_info)
+            {
+                create_info.mipLevels = levels_;
+                create_info.arrayLayers = layers_;
+            }
         };
 
-        struct ImageFormat
+        struct image_format
         {
             vk::Format format_ = {};
-            ImageFormat(vk::Format format);
-            void operator()(vk::ImageCreateInfo& create_info);
+
+            image_format(vk::Format format)
+                : format_(format)
+            {
+            }
+
+            void operator()(vk::ImageCreateInfo& create_info) { create_info.format = format_; }
         };
 
-        struct ColorAtchm
+        struct color_atchm
         {
             vk::ImageType type_ = vk::ImageType::e2D;
-            ColorAtchm(vk::ImageType type = vk::ImageType::e2D);
-            void operator()(vk::ImageCreateInfo& create_info);
+
+            color_atchm(vk::ImageType type = vk::ImageType::e2D)
+                : type_(type)
+            {
+            }
+
+            void operator()(vk::ImageCreateInfo& create_info)
+            {
+                create_info.imageType = type_;
+                create_info.usage ^= vk::ImageUsageFlagBits::eColorAttachment;
+            }
         };
 
-        struct DepthStencilAtchm
+        struct depth_stencil_atchm
         {
             vk::ImageType type_ = vk::ImageType::e2D;
-            DepthStencilAtchm(vk::ImageType type = vk::ImageType::e2D);
-            void operator()(vk::ImageCreateInfo& create_info);
+
+            depth_stencil_atchm(vk::ImageType type = vk::ImageType::e2D)
+                : type_(type)
+            {
+            }
+
+            void operator()(vk::ImageCreateInfo& create_info)
+            {
+                create_info.imageType = type_;
+                create_info.usage ^= vk::ImageUsageFlagBits::eDepthStencilAttachment;
+            }
         };
 
-        struct SampledImage
+        struct image_sampled
         {
             vk::ImageType type_ = vk::ImageType::e2D;
-            SampledImage(vk::ImageType type = vk::ImageType::e2D);
-            void operator()(vk::ImageCreateInfo& create_info);
+
+            image_sampled(vk::ImageType type = vk::ImageType::e2D)
+                : type_(type)
+            {
+            }
+
+            void operator()(vk::ImageCreateInfo& create_info)
+            {
+                create_info.imageType = type_;
+                create_info.usage ^= vk::ImageUsageFlagBits::eSampled;
+            }
         };
 
     }; // namespace ext

@@ -55,7 +55,8 @@ int main(int argc, char* argv[])
     vk::Sampler sampler = device.createSampler(sampler_cinfo);
 
     render::Material mat(allocator, device_detail.queue_.graphics_, cmd, //
-                         render::Material::LoadEmissive(sampler, pixels, {uint32_t(x), uint32_t(y), uint32_t(chan)}));
+                         render::Material::load_general(sampler, pixels, {uint32_t(x), uint32_t(y), uint32_t(chan)}),
+                         render::Material::load_mipmapped(sampler, pixels, {uint32_t(x), uint32_t(y), uint32_t(chan)}));
 
     RenderLoop loop(device, device_detail.queue_index_.graphics_);
     bool running = true;

@@ -54,15 +54,45 @@ namespace proj
         };
 
         // buffer create properties
-        void vertex_buffer(vk::BufferCreateInfo& create_info);
-        void index_buffer(vk::BufferCreateInfo& create_info);
-        void uniform_buffer(vk::BufferCreateInfo& create_info);
-        void trans_src(vk::BufferCreateInfo& create_info);
-        void trans_dst(vk::BufferCreateInfo& create_info);
+        inline void vertex_buffer(vk::BufferCreateInfo& create_info)
+        {
+            create_info.usage ^= vk::BufferUsageFlagBits::eVertexBuffer;
+        }
+
+        inline void index_buffer(vk::BufferCreateInfo& create_info)
+        {
+            create_info.usage ^= vk::BufferUsageFlagBits::eIndexBuffer;
+        }
+
+        inline void uniform_buffer(vk::BufferCreateInfo& create_info)
+        {
+            create_info.usage ^= vk::BufferUsageFlagBits::eUniformBuffer;
+        }
+
+        inline void trans_src(vk::BufferCreateInfo& create_info)
+        {
+            create_info.usage ^= vk::BufferUsageFlagBits::eTransferSrc;
+        }
+
+        inline void trans_dst(vk::BufferCreateInfo& create_info)
+        {
+            create_info.usage ^= vk::BufferUsageFlagBits::eTransferDst;
+        }
 
         // allocate properties
-        void host_seq(vma::AllocationCreateInfo& alloc_info);
-        void device_local(vma::AllocationCreateInfo& alloc_info);
+        inline void host_seq(vma::AllocationCreateInfo& alloc_info)
+        {
+            alloc_info.usage = vma::MemoryUsage::eAutoPreferHost;
+            alloc_info.flags ^= vma::AllocationCreateFlagBits::eHostAccessSequentialWrite;
+            alloc_info.requiredFlags ^= vk::MemoryPropertyFlagBits::eHostCoherent;
+        }
+
+        inline void device_local(vma::AllocationCreateInfo& alloc_info)
+        {
+            alloc_info.usage = vma::MemoryUsage::eAutoPreferDevice;
+            alloc_info.flags = {};
+            alloc_info.requiredFlags = {};
+        }
 
     }; // namespace ext
 };     // namespace proj
