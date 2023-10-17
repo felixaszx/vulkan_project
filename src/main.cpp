@@ -41,9 +41,6 @@ int main(int argc, char* argv[])
     Swapchain swapchian(c.instance(), device_detail, surface, {1024, 768});
     swapchian.layout_transition(cmd, device_detail.queue_.graphics_, vk::ImageLayout::ePresentSrcKHR);
 
-    int x, y, chan;
-    auto pixels = stbi_load("res/textures/ayaka.png", &x, &y, &chan, STBI_rgb_alpha);
-
     bool running = true;
     while (running)
     {
