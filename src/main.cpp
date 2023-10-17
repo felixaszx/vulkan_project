@@ -16,8 +16,6 @@ int main(int argc, char* argv[])
     Window w(1024, 768);
     auto exts = w.get_instance_exts();
 
-    const int a = 1;
-
     Contex c(exts);
 
     vk::SurfaceKHR surface = w.create_surface(c);
