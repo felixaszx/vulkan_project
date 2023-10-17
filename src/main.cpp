@@ -44,21 +44,6 @@ int main(int argc, char* argv[])
     int x, y, chan;
     auto pixels = stbi_load("res/textures/ayaka.png", &x, &y, &chan, STBI_rgb_alpha);
 
-    vk::SamplerCreateInfo sampler_cinfo{};
-    sampler_cinfo.anisotropyEnable = true;
-    sampler_cinfo.maxAnisotropy = 4;
-    sampler_cinfo.borderColor = vk::BorderColor::eFloatOpaqueBlack;
-    sampler_cinfo.maxLod = 1000.0f;
-    sampler_cinfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-    sampler_cinfo.magFilter = vk::Filter::eLinear;
-    sampler_cinfo.minFilter = vk::Filter::eLinear;
-    vk::Sampler sampler = device.createSampler(sampler_cinfo);
-
-    render::Material mat(allocator, device_detail.queue_.graphics_, cmd, //
-                         render::Material::load_general(sampler, pixels, {uint32_t(x), uint32_t(y), uint32_t(chan)}),
-                         render::Material::load_mipmapped(sampler, pixels, {uint32_t(x), uint32_t(y), uint32_t(chan)}));
-
-    RenderLoop loop(device, device_detail.queue_index_.graphics_);
     bool running = true;
     while (running)
     {
@@ -91,23 +76,6 @@ int main(int argc, char* argv[])
             {
                 running = false;
             }
-
-            loop.wait_for_last_frame();
-            uint32_t i = device.acquireNextImageKHR(swapchian, UINT64_MAX, loop.get_curr_image_sem()).value;
-
-            vk::CommandBufferBeginInfo begin{};
-            loop.get_cmd().begin(begin);
-            loop.end_cmd();
-            loop.submit(device_detail.queue_.graphics_);
-
-            uint32_t a[] = {i};
-            vk::Semaphore wait_sems[] = {loop.get_curr_submit_sem()};
-            vk::PresentInfoKHR present_info{};
-            present_info.setWaitSemaphores(wait_sems);
-            present_info.pSwapchains = &swapchian;
-            present_info.swapchainCount = 1;
-            present_info.setImageIndices(a);
-            auto k = device_detail.queue_.graphics_.presentKHR(present_info);
         }
     }
 

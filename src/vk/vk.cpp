@@ -198,17 +198,12 @@ namespace proj
         feature_.geometryShader = true;
 
         device_ext_names_.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-        device_ext_names_.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
         if (debug)
         {
             device_layer_names_.push_back("VK_LAYER_KHRONOS_validation");
         }
 
-        vk::PhysicalDeviceDynamicRenderingFeaturesKHR dynamic_rendering_feature{};
-        dynamic_rendering_feature.dynamicRendering = true;
-
         vk::DeviceCreateInfo device_create_info{};
-        device_create_info.pNext = &dynamic_rendering_feature;
         device_create_info.pEnabledFeatures = &feature_;
         device_create_info.setQueueCreateInfos(queue_create_infos);
         device_create_info.setPEnabledExtensionNames(device_ext_names_);
