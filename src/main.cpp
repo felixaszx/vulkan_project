@@ -8,6 +8,7 @@
 #include "ext/image.hpp"
 #include "render/mesh.hpp"
 #include "render/material.hpp"
+#include "render/pipelines.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -38,6 +39,10 @@ int main(int argc, char* argv[])
 
     Swapchain swapchian(c.instance(), device_detail, surface, {1024, 768});
     swapchian.layout_transition(cmd, device_detail.queue_.graphics_, vk::ImageLayout::ePresentSrcKHR);
+
+    render::DefferedPipelineSingleton deffered_pipeline(device);
+
+    deffered_pipeline.create_framebuffer(allocator, {1024, 768});
 
     bool running = true;
     while (running)

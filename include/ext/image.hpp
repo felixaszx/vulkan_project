@@ -68,6 +68,11 @@ namespace proj
             create_info.usage ^= vk::ImageUsageFlagBits::eTransferSrc;
         }
 
+        inline void image_input_atchm(vk::ImageCreateInfo& create_info)
+        {
+            create_info.usage ^= vk::ImageUsageFlagBits::eInputAttachment;
+        }
+
         // properties funtors
         struct sample_counts
         {

@@ -10,24 +10,33 @@ namespace proj
 {
     namespace render
     {
-        class DefferedPipelineSingleton
+        class DefferedPipelineSingleton : vk::Device
         {
+            //  fbo layout
+            //  0  |  1  |  2  |  3  |  4  |  5
+            //  c  |  c  |  c  |  c  |  d  |  c  // first subpass
+            //  i  |  i  |  i  |  i  |  d  |  c  // second subpass
           private:
             void load_subpass_info();
             void load_render_pass();
 
           public:
             vk::RenderPass render_pass_ = nullptr;
-            vk::Framebuffer framebufer_ = nullptr;
+            vk::Framebuffer framebuffer_ = nullptr;
 
-            vk::SubpassDescription subpasses_[3]{};
-            vk::SubpassDependency dependencies_[2]{};
+            vk::SubpassDescription subpasses_[2]{};
+            vk::SubpassDependency dependencies_[1]{};
 
             vk::AttachmentDescription atchm_des_[6]{};
-            vk::AttachmentReference atchm_refes_[5][3]{};
+            vk::AttachmentReference atchm_refes_[2][5]{};
 
-            DefferedPipelineSingleton();
+            std::vector<Image> images_n_views_{};
+            std::vector<vk::PipelineColorBlendAttachmentState> blend_states_[2];
+
+            DefferedPipelineSingleton(vk::Device device);
             ~DefferedPipelineSingleton();
+
+            void create_framebuffer(vma::Allocator allocator, vk::Extent2D extent);
         };
     }; // namespace render
 };     // namespace proj
