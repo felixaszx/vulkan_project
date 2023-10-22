@@ -42,8 +42,8 @@ namespace proj
           vk::PipelineShaderStageCreateInfo(shader),
           entry_(shader.entry_)
     {
-        shader.set_zero();
         this->pName = entry_.c_str();
+        shader.set_zero();
     }
 
     ShaderModule::~ShaderModule()
@@ -52,5 +52,21 @@ namespace proj
         {
             this->destroyShaderModule(*this);
         }
+    }
+
+    vk::Fence create_vk_fence(vk::Device device, bool signal)
+    {
+        vk::FenceCreateInfo create_info{};
+        if (signal)
+        {
+            create_info.flags = vk::FenceCreateFlagBits::eSignaled;
+        }
+        return device.createFence(create_info);
+    }
+
+    vk::Semaphore create_vk_semaphore(vk::Device device)
+    {
+        vk::SemaphoreCreateInfo create_info{};
+        return device.createSemaphore(create_info);
     }
 } // namespace proj

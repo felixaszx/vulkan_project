@@ -13,8 +13,8 @@ namespace proj
             uniform_buffer_->map_memory();
 
             update_matrices();
-            this->setBuffer(*uniform_buffer_);
-            this->setRange(sizeof(matrices_));
+            setBuffer(*uniform_buffer_);
+            setRange(sizeof(matrices_));
         }
 
         glm::vec3 Camera::get_front()
@@ -33,7 +33,7 @@ namespace proj
             matrices_.proj_ = glms::perspective(glm::radians(fov_),                           //
                                                 (float)extent_.width / (float)extent_.height, //
                                                 near_, far_);
-            memcpy(uniform_buffer_->mapping(), 0x0, sizeof(matrices_));
+            memcpy(uniform_buffer_->mapping(), &matrices_, sizeof(matrices_));
         }
     }; // namespace render
 };     // namespace proj

@@ -11,18 +11,15 @@ namespace proj
     {
         struct Camera : public vk::DescriptorBufferInfo
         {
-            inline static const glm::vec3 UP = glm::vec3(0.0f, 0.0f, 0.0f);
+            inline static const glm::vec3 UP = glm::vec3(0.0f, 1.0f, 0.0f);
 
             float yaw_ = 0.0f;
             float pitch_ = 0.0f;
             float fov_ = 45.0f;
-            float near_ = 0.5f;
+            float near_ = 0.1f;
             float far_ = 1000.0f;
 
-            float x_ = 0.0; // normalized, 0.0f to 1.0f
-            float y_ = 0.0; // normalized, 0.0f to 1.0f
             vk::Extent2D extent_;
-
             std::unique_ptr<Buffer> uniform_buffer_ = nullptr;
 
             struct

@@ -2,7 +2,6 @@
 
 namespace proj
 {
-
     DescriptorLayout::DescriptorLayout(vk::Device device,
                                        const std::vector<vk::DescriptorSetLayoutBinding>& bindings, //
                                        vk::DescriptorSetLayoutCreateFlagBits flags)

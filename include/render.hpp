@@ -21,6 +21,9 @@ namespace proj
         ShaderModule(ShaderModule&& shader);
         ~ShaderModule();
     };
+
+    vk::Fence create_vk_fence(vk::Device device, bool signal = false);
+    vk::Semaphore create_vk_semaphore(vk::Device device);
 } // namespace proj
 
 #endif // INCLUDE_RENDER_HPP

@@ -36,16 +36,6 @@ namespace proj
                                              vk::AccessFlagBits::eDepthStencilAttachmentWrite;
             dependencies_[0].dstAccessMask = vk::AccessFlagBits::eInputAttachmentRead | //
                                              vk::AccessFlagBits::eDepthStencilAttachmentRead;
-
-            blend_states_[0].resize(4);
-            blend_states_[1].resize(1);
-            for (int i = 0; i < 4; i++)
-            {
-                blend_states_[0][i].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-                                                     vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-            }
-            blend_states_[1][0].colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-                                                 vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
         }
 
         void DefferedPipelineSingleton::load_render_pass()
@@ -81,6 +71,11 @@ namespace proj
         {
             this->destroyFramebuffer(framebuffer_);
             this->destroyRenderPass(render_pass_);
+            if (layouts_[0])
+            {
+                this->destroyPipelineLayout(layouts_[0]);
+                this->destroyPipelineLayout(layouts_[1]);
+            }
         }
 
         void DefferedPipelineSingleton::create_framebuffer(vma::Allocator allocator, vk::Extent2D extent)
@@ -140,11 +135,11 @@ namespace proj
             }
             for (int i = 7; i < 11; i++)
             {
-                bindings[i] = {static_cast<uint32_t>(i), vk::DescriptorType::eInputAttachment, //
+                bindings[i] = {static_cast<uint32_t>(i - 7), vk::DescriptorType::eInputAttachment, //
                                1, vk::ShaderStageFlagBits::eFragment};
             }
             des_layouts_[0].reset(new DescriptorLayout(*this, {bindings, bindings + 7}));
-            des_layouts_[1].reset(new DescriptorLayout(*this, {bindings, bindings + 7}));
+            des_layouts_[1].reset(new DescriptorLayout(*this, {bindings + 7, bindings + 11}));
 
             for (int i = 0; i < 2; i++)
             {
@@ -154,17 +149,21 @@ namespace proj
                 layouts_[i] = this->createPipelineLayout(layout_info);
             }
 
-            vk::PipelineColorBlendAttachmentState blend_attachment_state{};
-            blend_attachment_state.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-                                                    vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-            std::vector<vk::PipelineColorBlendAttachmentState> blend_attachment_states(4, blend_attachment_state);
-            color_blends_[0].setAttachments(blend_attachment_states);
+            for (int i = 0; i < 5; i++)
+            {
+                blend_attachment_states_[i].colorWriteMask =
+                    vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | //
+                    vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+            }
+            color_blends_[0].pAttachments = blend_attachment_states_;
+            color_blends_[0].attachmentCount = 4;
 
-            blend_attachment_state.blendEnable = true;
-            blend_attachment_state.colorBlendOp = vk::BlendOp::eAdd;
-            blend_attachment_state.srcColorBlendFactor = vk::BlendFactor::eOne;
-            blend_attachment_state.dstColorBlendFactor = vk::BlendFactor::eOne;
-            color_blends_[1].setAttachments(blend_attachment_states[0]);
+            blend_attachment_states_[4].blendEnable = true;
+            blend_attachment_states_[4].colorBlendOp = vk::BlendOp::eAdd;
+            blend_attachment_states_[4].srcColorBlendFactor = vk::BlendFactor::eOne;
+            blend_attachment_states_[4].dstColorBlendFactor = vk::BlendFactor::eOne;
+            color_blends_[1].pAttachments = blend_attachment_states_ + 4;
+            color_blends_[1].attachmentCount = 1;
 
             multisample_state_.rasterizationSamples = vk::SampleCountFlagBits::e1;
         }
