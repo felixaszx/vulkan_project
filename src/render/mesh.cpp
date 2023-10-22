@@ -107,6 +107,7 @@ namespace proj
 
         void MeshData::bind_data(vk::CommandBuffer cmd)
         {
+            update_instance_matrices();
             vk::Buffer vertex_buffers[5] = {*vert_buffer_, *vert_buffer_, *vert_buffer_, *vert_buffer_,
                                             *matric_buffer_};
 

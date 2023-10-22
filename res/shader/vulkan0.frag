@@ -22,15 +22,15 @@ layout(binding = 5) uniform sampler2D norm_tex;
 layout(binding = 6) uniform sampler2D emis_tex;
 
 void main()
-{   /*
-     if (texture(opac_tex, frag_data.uv.xy).x == 0)
-     {
-         discard;
-     }
-     */
+{ /*
+   if (texture(opac_tex, frag_data.uv.xy).x == 0)
+   {
+       discard;
+   }
+   */
 
     position = vec4(frag_data.position, 1.0);
     normal = vec4(frag_data.normal, 1.0);
-    albedo = position;
-    specular = normal;
+    albedo = vec4(frag_data.color, 1.0) * texture(albe_tex, frag_data.uv.xy);
+    specular = albedo;
 }

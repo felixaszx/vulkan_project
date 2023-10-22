@@ -13,7 +13,6 @@
 
 int main(int argc, char* argv[])
 {
-    stbi_set_flip_vertically_on_load(true);
     using namespace proj;
     Window w(1920, 1080);
     auto exts = w.get_instance_exts();
@@ -54,7 +53,7 @@ int main(int argc, char* argv[])
     render::DefferedPipelineSingleton deffered_pipeline(device);
     deffered_pipeline.create_framebuffer(allocator, {1920, 1080});
 
-    MeshDataLoader mesh_loader("res/model/sponza/sponza.obj");
+    MeshDataLoader mesh_loader("res/model/cube/cube.obj");
     render::MeshData mesh_data(allocator, device_detail.queue_.graphics_, cmd, //
                                mesh_loader.positions_,                         //
                                mesh_loader.normals_,                           //
@@ -162,14 +161,37 @@ int main(int argc, char* argv[])
     render::Camera camera(allocator, {1920, 1080});
     camera.position_ += glm::vec3{0, 10, 0};
 
+    mesh_data.instance_matrices_[0] =
+        glm::translate(glm::mat4(1.0f), camera.get_front() + camera.get_front() + camera.get_front());
+
     vk::Semaphore image_aquired = create_vk_semaphore(device);
     vk::Semaphore submit_finish = create_vk_semaphore(device);
     vk::Fence frame_fence = create_vk_fence(device, true);
+
+    vk::SamplerCreateInfo sampler_info{};
+    sampler_info.anisotropyEnable = true;
+    sampler_info.maxAnisotropy = 4;
+    sampler_info.borderColor = vk::BorderColor::eFloatOpaqueBlack;
+    sampler_info.maxLod = 1000.0f;
+    sampler_info.mipmapMode = vk::SamplerMipmapMode::eLinear;
+    sampler_info.magFilter = vk::Filter::eLinear;
+    sampler_info.minFilter = vk::Filter::eLinear;
+    vk::Sampler sampelr = device.createSampler(sampler_info);
+
+    int ww, h, chan;
+    unsigned char* pixels = stbi_load("res/textures/ayaka.png", &ww, &h, &chan, STBI_rgb_alpha);
+    render::Material mat(allocator, device_detail.queue_.graphics_, cmd,
+                         render::Material::load_mipmapped(sampelr, pixels, vk::Extent3D(ww, h, chan)));
 
     vk::WriteDescriptorSet write_set;
     write_set.descriptorCount = 1;
     write_set.descriptorType = vk::DescriptorType::eUniformBuffer;
     write_set.pBufferInfo = &camera;
+    des_pool.update_sets(write_set, 0);
+    write_set.descriptorCount = 1;
+    write_set.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    write_set.dstBinding = 1;
+    write_set.pImageInfo = mat.infos_.data();
     des_pool.update_sets(write_set, 0);
 
     vk::DescriptorImageInfo input_atchm[4]{};
@@ -181,6 +203,7 @@ int main(int argc, char* argv[])
     write_set.descriptorCount = 4;
     write_set.descriptorType = vk::DescriptorType::eInputAttachment;
     write_set.pImageInfo = input_atchm;
+    write_set.dstBinding = 0;
     des_pool.update_sets(write_set, 1);
 
     bool running = true;
@@ -288,6 +311,8 @@ int main(int argc, char* argv[])
         auto result = device_detail.queue_.graphics_.presentKHR(present);
     }
 
+    device.waitIdle();
+    device.destroySampler(sampelr);
     device.destroySemaphore(image_aquired);
     device.destroySemaphore(submit_finish);
     device.destroyFence(frame_fence);
