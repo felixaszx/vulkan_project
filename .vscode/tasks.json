@@ -84,7 +84,7 @@
         },
         {
             "type": "shell",
-            "label": "Build and copy",
+            "label": "Build",
             "detail": "Build and copy",
             "command": "",
             "dependsOrder": "sequence",
@@ -99,29 +99,7 @@
             "dependsOn": [
                 "glslc",
                 "CMake: configure",
-                "CMake: build",
-                //"add dlls info",
-                //"copy dlls"
-            ]
-        },
-        {
-            "type": "shell",
-            "label": "Build",
-            "detail": "Build ",
-            "command": "",
-            "presentation": {
-                "echo": true,
-                "reveal": "silent",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            },
-            "dependsOrder": "sequence",
-            "dependsOn": [
-                "glslc",
-                "CMake: configure",
-                "CMake: build",
+                "CMake: build"
             ]
         }
     ]

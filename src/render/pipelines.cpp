@@ -126,6 +126,33 @@ namespace proj
             framebuffer_info.width = extent.width;
             framebuffer_info.height = extent.height;
             framebuffer_ = allocator.getAllocatorInfo().device.createFramebuffer(framebuffer_info);
+            generate_pipeline_layout();
+        }
+
+        void DefferedPipelineSingleton::generate_pipeline_layout()
+        {
+            vk::DescriptorSetLayoutBinding bindings[11]{};
+            bindings[0] = {0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex};
+            for (int i = 1; i < 7; i++)
+            {
+                bindings[i] = {static_cast<uint32_t>(i), vk::DescriptorType::eCombinedImageSampler, //
+                               1, vk::ShaderStageFlagBits::eFragment};
+            }
+            for (int i = 7; i < 11; i++)
+            {
+                bindings[i] = {static_cast<uint32_t>(i), vk::DescriptorType::eInputAttachment, //
+                               1, vk::ShaderStageFlagBits::eFragment};
+            }
+            des_layouts_[0].reset(new DescriptorLayout(*this, {bindings, bindings + 7}));
+            des_layouts_[1].reset(new DescriptorLayout(*this, {bindings, bindings + 7}));
+
+            for (int i = 0; i < 2; i++)
+            {
+                vk::PipelineLayoutCreateInfo layout_info{};
+                layout_info.pSetLayouts = des_layouts_[i].get();
+                layout_info.setLayoutCount = 1;
+                layouts_[i] = this->createPipelineLayout(layout_info);
+            }
         }
 
     }; // namespace render

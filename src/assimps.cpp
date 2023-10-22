@@ -2,7 +2,6 @@
 
 namespace proj
 {
-
     MeshDataLoader::MeshDataLoader(const std::string& file_path)
     {
         Assimp::Importer importer;

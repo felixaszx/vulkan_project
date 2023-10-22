@@ -37,6 +37,13 @@ namespace proj
             ~DefferedPipelineSingleton();
 
             void create_framebuffer(vma::Allocator allocator, vk::Extent2D extent);
+
+            // pipeline details
+            vk::Pipeline pipelines_[2]{};
+            vk::PipelineLayout layouts_[2]{};
+            std::unique_ptr<DescriptorLayout> des_layouts_[2]{};
+
+            void generate_pipeline_layout();
         };
     }; // namespace render
 };     // namespace proj

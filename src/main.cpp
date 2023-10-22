@@ -41,7 +41,6 @@ int main(int argc, char* argv[])
     swapchian.layout_transition(cmd, device_detail.queue_.graphics_, vk::ImageLayout::ePresentSrcKHR);
 
     render::DefferedPipelineSingleton deffered_pipeline(device);
-
     deffered_pipeline.create_framebuffer(allocator, {1024, 768});
 
     bool running = true;
