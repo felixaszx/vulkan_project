@@ -153,6 +153,20 @@ namespace proj
                 layout_info.setLayoutCount = 1;
                 layouts_[i] = this->createPipelineLayout(layout_info);
             }
+
+            vk::PipelineColorBlendAttachmentState blend_attachment_state{};
+            blend_attachment_state.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+                                                    vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+            std::vector<vk::PipelineColorBlendAttachmentState> blend_attachment_states(4, blend_attachment_state);
+            color_blends_[0].setAttachments(blend_attachment_states);
+
+            blend_attachment_state.blendEnable = true;
+            blend_attachment_state.colorBlendOp = vk::BlendOp::eAdd;
+            blend_attachment_state.srcColorBlendFactor = vk::BlendFactor::eOne;
+            blend_attachment_state.dstColorBlendFactor = vk::BlendFactor::eOne;
+            color_blends_[1].setAttachments(blend_attachment_states[0]);
+
+            multisample_state_.rasterizationSamples = vk::SampleCountFlagBits::e1;
         }
 
     }; // namespace render

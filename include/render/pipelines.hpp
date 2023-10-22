@@ -42,8 +42,13 @@ namespace proj
             vk::Pipeline pipelines_[2]{};
             vk::PipelineLayout layouts_[2]{};
             std::unique_ptr<DescriptorLayout> des_layouts_[2]{};
+            vk::PipelineColorBlendStateCreateInfo color_blends_[2]{};
+            vk::PipelineMultisampleStateCreateInfo multisample_state_{};
 
+          private:
             void generate_pipeline_layout();
+
+          public:
         };
     }; // namespace render
 };     // namespace proj
