@@ -13,17 +13,15 @@
 
 int main(int argc, char* argv[])
 {
-    stbi_set_flip_vertically_on_load_thread(true);
     using namespace proj;
     Window w(1920, 1080);
     auto exts = w.get_instance_exts();
 
-    Contex c(exts, false);
+    Contex c(exts);
 
     vk::SurfaceKHR surface = w.create_surface(c);
 
     DeviceCreator device_c{};
-    device_c.debug = false;
     DeviceDetail device_detail = device_c.create_device(c);
     vk::Device device = device_detail.device_;
     vma::Allocator allocator = device_detail.allocator_;

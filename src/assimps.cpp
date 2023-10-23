@@ -42,6 +42,10 @@ namespace proj
             else
             {
                 memcpy(uvs_.data() + curr_size, mesh->mTextureCoords[0], mesh->mNumVertices * sizeof(glm::vec3));
+                for (auto& uv : uvs_)
+                {
+                    uv.y = 1 - uv.y;
+                }
             }
 
             if (mesh->mColors[0] == nullptr)
