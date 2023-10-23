@@ -11,10 +11,9 @@ namespace proj
             BufferCreator uniform_creator(allocator, uniform_buffer, host_seq);
             uniform_buffer_.reset(new Buffer(uniform_creator.create(sizeof(matrices_))));
             uniform_buffer_->map_memory();
-
-            update_matrices();
             setBuffer(*uniform_buffer_);
             setRange(sizeof(matrices_));
+            update_matrices();
         }
 
         glm::vec3 Camera::get_front()

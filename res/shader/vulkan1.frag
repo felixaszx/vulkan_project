@@ -14,5 +14,5 @@ void main()
     vec3 frag_pos = subpassLoad(position).rgb;
     vec3 frag_normal = subpassLoad(normal).rgb;
 
-    light_result = vec4(frag_normal, 1.0);
+    light_result = vec4(frag_color, 1.0);
 }

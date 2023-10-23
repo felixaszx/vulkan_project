@@ -64,7 +64,7 @@ namespace proj
 
             // set basic info
             mesh_size_ = meshes_indices_count.size();
-            instance_matrices_.resize(mesh_size_, glm::mat4(1.0f));
+            instance_matrices_.resize(instance_count, glm::mat4(1.0f));
             matric_buffer_->map_memory();
             update_instance_matrices();
 

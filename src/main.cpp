@@ -13,15 +13,17 @@
 
 int main(int argc, char* argv[])
 {
+    stbi_set_flip_vertically_on_load_thread(true);
     using namespace proj;
     Window w(1920, 1080);
     auto exts = w.get_instance_exts();
 
-    Contex c(exts);
+    Contex c(exts, false);
 
     vk::SurfaceKHR surface = w.create_surface(c);
 
     DeviceCreator device_c{};
+    device_c.debug = false;
     DeviceDetail device_detail = device_c.create_device(c);
     vk::Device device = device_detail.device_;
     vma::Allocator allocator = device_detail.allocator_;
@@ -158,12 +160,6 @@ int main(int argc, char* argv[])
     DescriptorPool des_pool(device, {deffered_pipeline.des_layouts_[0].get(), deffered_pipeline.des_layouts_[1].get()});
     vk::DescriptorSet des_sets[2] = {des_pool.get_set(0), des_pool.get_set(1)};
 
-    render::Camera camera(allocator, {1920, 1080});
-    camera.position_ += glm::vec3{0, 10, 0};
-
-    mesh_data.instance_matrices_[0] =
-        glm::translate(glm::mat4(1.0f), camera.get_front() + camera.get_front() + camera.get_front());
-
     vk::Semaphore image_aquired = create_vk_semaphore(device);
     vk::Semaphore submit_finish = create_vk_semaphore(device);
     vk::Fence frame_fence = create_vk_fence(device, true);
@@ -179,9 +175,11 @@ int main(int argc, char* argv[])
     vk::Sampler sampelr = device.createSampler(sampler_info);
 
     int ww, h, chan;
-    unsigned char* pixels = stbi_load("res/textures/ayaka.png", &ww, &h, &chan, STBI_rgb_alpha);
+    unsigned char* pixels = stbi_load("res/textures/elysia.png", &ww, &h, &chan, STBI_rgb_alpha);
     render::Material mat(allocator, device_detail.queue_.graphics_, cmd,
                          render::Material::load_mipmapped(sampelr, pixels, vk::Extent3D(ww, h, chan)));
+
+    render::Camera camera(allocator, {1920, 1080});
 
     vk::WriteDescriptorSet write_set;
     write_set.descriptorCount = 1;
@@ -205,6 +203,9 @@ int main(int argc, char* argv[])
     write_set.pImageInfo = input_atchm;
     write_set.dstBinding = 0;
     des_pool.update_sets(write_set, 1);
+
+    mesh_data.instance_matrices_[0] =
+        glm::translate(glm::mat4(1.0f), camera.get_front() + camera.get_front() + camera.get_front());
 
     bool running = true;
     while (running)
@@ -240,6 +241,7 @@ int main(int argc, char* argv[])
             }
         }
 
+        camera.update_matrices();
         uint32_t image_index =
             device.acquireNextImageKHR(swapchian, std::numeric_limits<uint64_t>::max(), image_aquired).value;
         try_vk(auto result = device.waitForFences(frame_fence, true, UINT64_MAX));
